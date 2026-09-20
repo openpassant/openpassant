@@ -1,0 +1,23 @@
+{
+  "name": "@openpassant/core",
+  "version": "0.1.0",
+  "description": "Canonicalisation, hashing, Merkle trees and proof-bundle verification for Passant digital product passports (passant-crypto/1).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.4.0"
+  }
+}
