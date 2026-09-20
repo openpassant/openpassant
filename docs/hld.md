@@ -1,6 +1,6 @@
 # Passant: High-Level Design v0.1
 
-Exported 19 September 2026 from the living design doc. Where this file and `crypto-spec.md` differ on hashing details, the crypto spec wins.
+Exported 19 September 2026 from the living design doc; hashing and access-model passages revised 20 September 2026 to match `passant-crypto/2` (four Annex XIII content sections instead of three access tiers — see `docs/research/regulation-2023-1542-verification.md` for why). Where this file and `crypto-spec.md` differ on hashing details, the crypto spec wins.
 
 ## 1. Purpose and scope
 
@@ -24,7 +24,7 @@ The MVP targets one regulation and one customer type: the battery passport that 
 
 ## 2. Regulatory requirements
 
-From 18 February 2027, every LMT battery, EV battery and industrial battery above 2 kWh placed on the EU market needs a battery passport under Article 77 of Regulation (EU) 2023/1542. LMT and EV batteries are in scope regardless of capacity; the 2 kWh threshold applies only to industrial batteries. The summary below is from secondary sources and must be checked against the EUR-Lex text before implementation.
+From 18 February 2027, every LMT battery, EV battery and industrial battery above 2 kWh placed on the EU market needs a battery passport under Article 77 of Regulation (EU) 2023/1542. LMT and EV batteries are in scope regardless of capacity; the 2 kWh threshold applies only to industrial batteries. The summary below was originally from secondary sources; it was verified against the EUR-Lex consolidated text on 20 September 2026 — see `docs/research/regulation-2023-1542-verification.md` for the claim-by-claim result, including the Article 77(10) registry-upload obligation this table predates.
 
 | Requirement | What it means for Passant | Source |
 | --- | --- | --- |
@@ -38,11 +38,11 @@ From 18 February 2027, every LMT battery, EV battery and industrial battery abov
 
 **Standards to build on, not reinvent**
 
-- Annex XIII of the regulation for the mandatory field list and access tier of each field.
+- Annex XIII of the regulation for the mandatory field list and the content section (Annex XIII point) of each field.
 - DIN DKE SPEC 99100 and the Battery Pass consortium content guidance for the concrete attribute definitions.
 - GS1 Digital Link for the identifier and QR payload.
 
-A Commission delegated act on access rights and on rules for entering and updating passport data was due by 18 August 2026 ([nulara.de](https://nulara.de/en-US/batteriepass)). Its status and content need checking, because it decides how the legitimate-interest tier is authenticated.
+A Commission **implementing act** under Article 77(9), covering access rights and (via Article 78(f)) rules for entering and updating passport data, was due by 18 August 2026. It missed that deadline; as of 20 September 2026 no draft is public and the Commission's timeline says Q4 2026 (see `docs/research/regulation-2023-1542-verification.md`). It decides how the legitimate-interest role is authenticated, so that authorisation policy must stay configurable.
 
 ## 3. System overview
 
@@ -70,7 +70,7 @@ The left half is the write path: an operator creates or updates a passport, the 
 2. For each production batch, the operator uploads serial numbers; Passant mints one unit passport per serial, inheriting the model data.
 3. Each passport version is canonicalised, hashed and anchored. Batches are anchored as a single Merkle root to keep transaction counts low.
 4. Passant generates the QR code for each unit for printing or engraving.
-5. A scan resolves to the public view; authenticated callers get the restricted tiers.
+5. A scan resolves to the public view; authenticated callers get the sections their role allows.
 6. Later events (repair, repurposing, recycling) append new versions; earlier versions stay retrievable.
 
 ## 4. Data model
@@ -82,26 +82,27 @@ Six entities cover the MVP. The key design choice is that passports are append-o
 | Operator | The company legally responsible for the passport | name, EU address, operator identifier, API keys |
 | BatteryModel | Data shared by every unit of a model | chemistry, rated capacity, carbon footprint, recycled content shares, hazardous substances, documents |
 | Passport | One per physical battery | unique identifier, serial number, model reference, status (active, repurposed, waste, recycled), manufacture date and place |
-| PassportVersion | Immutable snapshot of a passport's full content | version number, canonical JSON per access tier, one salt and one hash per tier, combined leaf hash, author, timestamp, reason for change |
+| PassportVersion | Immutable snapshot of a passport's full content | version number, canonical JSON per content section, one salt and one hash per section, combined leaf hash, author, timestamp, reason for change |
 | Anchor | Proof that a version existed unaltered at a point in time | chain id, transaction id, Merkle root, Merkle proof for this version, block time |
-| AccessGrant | Who may see the restricted tiers | grantee, tier, scope (operator, model or unit), expiry |
+| AccessGrant | Who may see the restricted sections | grantee, role (legitimate interest or authority), scope (operator, model or unit), expiry |
 
-**Field-level access tiers.** Every attribute in the schema carries a tier tag (`public`, `legitimate_interest`, `authority`) taken from Annex XIII. The resolver filters on that tag, so access rules live in the schema rather than in view code.
+**Field-level content sections.** Every attribute in the schema carries a section tag (`public`, `restricted`, `compliance`, `usage`), one per Annex XIII content point. Access roles map onto sections per Article 77(2) and are not nested: the public reads `public`; legitimate-interest persons read `public`, `restricted` and `usage`; notified bodies, market surveillance authorities and the Commission read `public`, `restricted` and `compliance`. The resolver filters on the section tag and the caller's role, so access rules live in the schema rather than in view code.
 
 **Identifier.** The unique identifier is a GS1 Digital Link URL, for example `https://id.example.com/01/<GTIN>/21/<serial>`. The same URL is the QR payload, the passport's primary key in the API and the address of the public page. The domain is the operator's own, on a dedicated subdomain such as `id.brand.com`, configured through a single `BASE_URL` setting. A QR code engraved on a battery may be scanned for 15 years, so the operator must be able to repoint that subdomain to another host without depending on Passant.
 
 **Canonical form.** Hashes are computed over JSON canonicalised with RFC 8785 (JCS), so the same content always yields the same hash regardless of key order or whitespace.
 
-**Per-tier hashing.** Each version is split into three documents by access tier, and each is hashed with its own 16-byte random salt. The Merkle leaf is the hash of the three tier hashes in fixed order:
+**Per-section hashing.** Each version is split into four documents, one per Annex XIII content section, and each is hashed with its own 16-byte random salt. The Merkle leaf is the hash of the four section hashes in fixed order:
 
 ```
-h_pub  = SHA256(salt_pub  || JCS(public fields))
-h_li   = SHA256(salt_li   || JCS(legitimate-interest fields))
-h_auth = SHA256(salt_auth || JCS(authority fields))
-leaf   = SHA256(h_pub || h_li || h_auth)
+h_public     = SHA256(salt_public     || JCS(public fields))
+h_restricted = SHA256(salt_restricted || JCS(restricted fields))
+h_compliance = SHA256(salt_compliance || JCS(compliance fields))
+h_usage      = SHA256(salt_usage      || JCS(usage fields))
+leaf         = SHA256(h_public || h_restricted || h_compliance || h_usage)
 ```
 
-A caller receives the JSON and salt for the tiers they may see, plus the bare hashes of the others. They can verify their own view against the chain without learning anything about the restricted data. Salts stop sibling leaves in a Merkle proof from being guessed, since units of one model differ mainly by serial number.
+A caller receives the JSON and salt for the sections their role may see, plus the bare hashes of the others. They can verify their own view against the chain without learning anything about the restricted data. Because roles overlap without nesting, per-section hashes are what let each role verify exactly its own view. Salts stop sibling leaves in a Merkle proof from being guessed, since units of one model differ mainly by serial number.
 
 **Interoperable output.** Each passport is also served as JSON-LD, with the vocabulary mapped to the DIN DKE SPEC 99100 attribute names.
 
@@ -113,7 +114,7 @@ Five components, deployed as one service in the MVP. Boundaries are drawn so eac
 | --- | --- | --- |
 | Issuing API | Create models, mint unit passports in bulk, append versions, validate against the schema | REST + OpenAPI; `POST /models`, `POST /passports:batch`, `POST /passports/{id}/versions` |
 | Resolver | Turn an identifier URL into the right representation | HTML for browsers, JSON-LD on content negotiation, `?version=n` for history |
-| Access control | Decide which tier a caller gets | Public by default; signed, expiring grant tokens for the restricted tiers |
+| Access control | Decide which sections a caller gets, from their role | Public by default; signed, expiring grant tokens for the restricted roles |
 | Supplier intake | Get model data in without an ERP | CSV template upload and a web form, both validated against the schema |
 | Anchoring adapter | Commit hashes to a chain and verify them | Interface with `anchor(root)`, `verify(hash, proof)`, `status(txId)`; VeChain implementation first |
 
@@ -140,10 +141,10 @@ sequenceDiagram
   participant U as Browser
   participant R as Resolver
   participant N as VeChain node
-  U->>R: GET passport (caller's tier)
-  R-->>U: tier JSON + salt, other tier hashes
+  U->>R: GET passport (caller's role)
+  R-->>U: section JSON + salts, other section hashes
   R-->>U: Merkle proof, tx id
-  U->>U: hash tier, combine into leaf
+  U->>U: hash sections, combine four hashes into leaf
   U->>U: fold proof to root
   U->>N: fetch Anchored event by tx id
   N-->>U: root, sender, block time
@@ -163,7 +164,7 @@ The hashes-only rule removes the hardest problem: nothing on the immutable ledge
 | Risk | Mitigation |
 | --- | --- |
 | Personal data ends up on-chain | Only Merkle roots are anchored; leaves are salted so a hash cannot be brute-forced back to low-entropy content |
-| Restricted-tier data leaks | Tier tags enforced in one place (the resolver filter); restricted responses never cached; grants are signed and expire |
+| Restricted-section data leaks | Section tags enforced in one place (the resolver filter); restricted responses never cached; grants are signed and expire |
 | Operator signing key stolen | Keys held in an encrypted keystore or KMS; key rotation supported by registering a new sender address for the operator |
 | Identifier enumeration (guessing serials to scrape a catalogue) | Rate limiting; serial component may be a random token rather than the factory serial |
 | QR code copied onto a counterfeit battery | Out of scope for software alone; flagged to the user as a known limit, addressed later by secure NFC tags |
@@ -196,14 +197,14 @@ The first deliverable is one thin path through every component: create a passpor
 
 | Milestone | Deliverable | Done when |
 | --- | --- | --- |
-| M0, week 1 | Requirements pass: Annex XIII and DIN DKE SPEC 99100 read; LMT field list with tier tags drafted as JSON Schema | Schema validates one hand-written sample e-bike battery passport |
+| M0, week 1 | Requirements pass: Annex XIII and DIN DKE SPEC 99100 read; LMT field list with section tags drafted as JSON Schema | Schema validates one hand-written sample e-bike battery passport |
 | M1, week 2 | `core` package: canonicalisation, salted hashing, Merkle tree and proofs, with tests | Proofs round-trip for 1, 2 and 1,000 leaves |
 | M2, week 3 | `server`: models, batch mint, versions, Postgres persistence, OpenAPI | Batch of 100 passports created through the API |
 | M3, week 4 | `adapter-vechain`: registry contract on testnet, batched anchoring, fee delegation | Anchor transaction visible on the testnet explorer, paid by the sponsor wallet |
 | M4, week 5 | Resolver: public HTML page, JSON-LD, QR generation, in-browser verification | Scanning a printed QR with a phone shows the passport and a passing check |
 | M5, week 6 | Docker Compose, README, demo data set, short demo video | A fresh machine reaches a working demo in under an hour |
 
-**Deliberately left out of the slice:** restricted-tier access grants, the admin UI (the API plus a script is enough for the demo), CSV intake, and EU registry integration. They follow once the slice has been shown to a pilot user and to the VeChain grant programme.
+**Deliberately left out of the slice:** restricted-section access grants, the admin UI (the API plus a script is enough for the demo), CSV intake, and EU registry integration. They follow once the slice has been shown to a pilot user and to the VeChain grant programme.
 
 **In parallel, non-code:** trademark and domain checks for the name, the GitHub organisation, and a shortlist of five e-bike battery brands or importers to approach with the demo.
 
@@ -214,14 +215,14 @@ Four design forks were closed on 19 September 2026, so an implementing agent doe
 | Decision | Choice | Reason |
 | --- | --- | --- |
 | Backend language | TypeScript | Server and in-browser verifier share one `core` package, so they cannot disagree about a hash |
-| Leaf hashing | Salted, one hash per access tier, combined into the leaf | Lets every tier verify its own view; stops sibling leaves being guessed |
+| Leaf hashing | Salted, one hash per Annex XIII content section (four), combined into the leaf | Lets every role verify exactly its own view of overlapping, non-nested access rights; stops sibling leaves being guessed |
 | Identifier domain | Operator's own dedicated subdomain, set by `BASE_URL` | Passports must outlive any host, including Passant |
 | Database | PostgreSQL only | One code path to test; JSONB fits immutable versions; needed for hosting anyway |
 
 The questions below are still open. The first three could change the design; none blocks the first vertical slice.
 
-- [ ] Has the Commission adopted the delegated act on passport access rights (due 18 August 2026), and what authentication does it require for the legitimate-interest tier?
-- [ ] Is the EU DPP registry live, and is there a published interface for registering identifiers?
+- [ ] What will the Article 77(9) implementing act on passport access rights require for authenticating the legitimate-interest role? (Its 18 August 2026 deadline was missed; not adopted and no public draft as of 20 September 2026, expected Q4 2026 — see `docs/research/regulation-2023-1542-verification.md`.)
+- [x] Is the EU DPP registry live, and is there a published interface for registering identifiers? — Yes: live since 20 July 2026 with a web UI and API (IR (EU) 2026/1778); uploading each identifier is an obligation under Article 77(10). Remaining: hands-on API details for the battery flow.
 - [ ] Must a DPP service provider be established in the EU, and does that apply to software that operators self-host?
 - [ ] Does the battery passport need a GTIN from GS1 (a paid membership for the operator), or is another ISO/IEC 15459 issuer acceptable for small importers?
 - [ ] Is a VeChain Foundation grant programme currently open, and what strings does it attach to IP and chain exclusivity?
@@ -232,7 +233,7 @@ Everything below is out of scope for v0.1 and listed only so early decisions do 
 
 | Phase | Adds | Depends on |
 | --- | --- | --- |
-| v0.2 | Restricted-tier access grants, admin UI, CSV supplier intake, EU registry registration | Delegated act on access rights; registry interface |
+| v0.2 | Restricted-section access grants, admin UI, CSV supplier intake, EU registry registration | Article 77(9) implementing act on access rights; hands-on registry API details |
 | v0.3 | Lifecycle events: repair, repurposing, change of responsible operator, recycling | A pilot user with real second-life flows |
 | Hardware | BMS state-of-health import over CAN or UART; secure NFC tags that bind the passport to the physical pack | Pilot hardware; tag vendor choice |
 | Hosted service | Multi-tenant hosting, sponsored gas, independent backup copies, support contracts | Legal entity; service-provider rules under the ESPR |

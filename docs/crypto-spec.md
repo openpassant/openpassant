@@ -24,7 +24,7 @@ Domain-separation bytes prevent a value of one kind from being mistaken for anot
 | `0x00` | Leaf hash |
 | `0x01` | Merkle interior node |
 
-Note: the HLD shows the hashing formula without these prefix bytes, and still describes the withdrawn three-tier layout. This spec is authoritative.
+Note: the HLD shows the hashing formula without these prefix bytes for readability. This spec is authoritative.
 
 ## 2. Section documents
 
