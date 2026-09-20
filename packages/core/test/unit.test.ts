@@ -7,11 +7,11 @@ import {
   fromHex,
   generateSalt,
   leafHash,
-  tierHash,
-  TIERS,
+  sectionHash,
+  SECTIONS,
   toHex,
 } from '../src/index.js';
-import type { ProofStep, TierDoc } from '../src/index.js';
+import type { ProofStep, SectionDoc } from '../src/index.js';
 import { syntheticLeafHex } from './helpers.js';
 
 function codeOf(fn: () => unknown): string {
@@ -27,9 +27,9 @@ function codeOf(fn: () => unknown): string {
 const leafA = fromHex(syntheticLeafHex(0));
 const leafB = fromHex(syntheticLeafHex(1));
 
-describe('TIERS', () => {
+describe('SECTIONS', () => {
   it('is the fixed order of crypto spec section 2', () => {
-    expect(TIERS).toEqual(['public', 'legitimate_interest', 'authority']);
+    expect(SECTIONS).toEqual(['public', 'restricted', 'compliance', 'usage']);
   });
 });
 
@@ -57,24 +57,25 @@ describe('generateSalt', () => {
   });
 });
 
-describe('tierHash and leafHash input validation', () => {
-  const doc: TierDoc = { id: 'https://id.example/1', version: 1, tier: 'public', data: {} };
+describe('sectionHash and leafHash input validation', () => {
+  const doc: SectionDoc = { id: 'https://id.example/1', version: 1, section: 'public', data: {} };
 
   it('rejects a salt that is not 16 bytes', () => {
-    expect(codeOf(() => tierHash(new Uint8Array(15), doc))).toBe('BAD_LENGTH');
-    expect(codeOf(() => tierHash(new Uint8Array(17), doc))).toBe('BAD_LENGTH');
+    expect(codeOf(() => sectionHash(new Uint8Array(15), doc))).toBe('BAD_LENGTH');
+    expect(codeOf(() => sectionHash(new Uint8Array(17), doc))).toBe('BAD_LENGTH');
   });
 
   it('does not mutate the salt', () => {
     const salt = new Uint8Array(16).fill(7);
-    tierHash(salt, doc);
+    sectionHash(salt, doc);
     expect(toHex(salt)).toBe('07'.repeat(16));
   });
 
-  it('rejects tier hashes that are not 32 bytes', () => {
-    expect(codeOf(() => leafHash(new Uint8Array(31), leafA, leafB))).toBe('BAD_LENGTH');
-    expect(codeOf(() => leafHash(leafA, new Uint8Array(33), leafB))).toBe('BAD_LENGTH');
-    expect(codeOf(() => leafHash(leafA, leafB, new Uint8Array(0)))).toBe('BAD_LENGTH');
+  it('rejects section hashes that are not 32 bytes', () => {
+    expect(codeOf(() => leafHash(new Uint8Array(31), leafA, leafB, leafA))).toBe('BAD_LENGTH');
+    expect(codeOf(() => leafHash(leafA, new Uint8Array(33), leafB, leafA))).toBe('BAD_LENGTH');
+    expect(codeOf(() => leafHash(leafA, leafB, new Uint8Array(0), leafA))).toBe('BAD_LENGTH');
+    expect(codeOf(() => leafHash(leafA, leafB, leafA, new Uint8Array(31)))).toBe('BAD_LENGTH');
   });
 });
 

@@ -26,7 +26,7 @@ Read before working:
 | --- | --- |
 | Language | TypeScript, strict mode, end to end |
 | Shared code | `core` runs unchanged in Node and in the browser; server and in-browser verifier share it |
-| Hashing | Salted, one hash per access tier, combined into the leaf (see crypto spec) |
+| Hashing | Salted, one hash per Annex XIII content section (four), combined into the leaf (see crypto spec, `passant-crypto/2`) |
 | Identifier domain | Operator's own dedicated subdomain, from a single `BASE_URL` setting |
 | Database | PostgreSQL only |
 | Licence | Apache 2.0; every source file carries the SPDX header `// SPDX-License-Identifier: Apache-2.0` |

@@ -32,43 +32,52 @@ describe('computeBundleRoot fails closed on malformed input', () => {
   it('an unknown spec', () => {
     expectFailure(
       corrupted((b) => {
-        b.spec = 'passant-proof/2';
+        b.spec = 'passant-proof/3';
       }),
       'UNKNOWN_SPEC',
     );
   });
 
-  it('a missing tier', () => {
+  it('the withdrawn passant-proof/1 spec', () => {
     expectFailure(
       corrupted((b) => {
-        delete b.tiers.authority;
+        b.spec = 'passant-proof/1';
       }),
-      'TIER_MISSING',
+      'UNKNOWN_SPEC',
     );
   });
 
-  it('a tier with both doc and hash', () => {
+  it('a missing section', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.public.hash = b.tiers.legitimate_interest.hash;
+        delete b.sections.usage;
       }),
-      'TIER_MALFORMED',
+      'SECTION_MISSING',
     );
   });
 
-  it('a tier with neither doc nor hash', () => {
+  it('a section with both doc and hash', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.public = {};
+        b.sections.public.hash = b.sections.restricted.hash;
       }),
-      'TIER_MALFORMED',
+      'SECTION_MALFORMED',
+    );
+  });
+
+  it('a section with neither doc nor hash', () => {
+    expectFailure(
+      corrupted((b) => {
+        b.sections.public = {};
+      }),
+      'SECTION_MALFORMED',
     );
   });
 
   it('uppercase hex', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.legitimate_interest.hash = b.tiers.legitimate_interest.hash.toUpperCase();
+        b.sections.restricted.hash = b.sections.restricted.hash.toUpperCase();
       }),
       'BAD_HEX',
     );
@@ -77,7 +86,7 @@ describe('computeBundleRoot fails closed on malformed input', () => {
   it('0x-prefixed hex', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.legitimate_interest.hash = '0x' + b.tiers.legitimate_interest.hash;
+        b.sections.restricted.hash = '0x' + b.sections.restricted.hash;
       }),
       'BAD_HEX',
     );
@@ -86,7 +95,7 @@ describe('computeBundleRoot fails closed on malformed input', () => {
   it('a hash of the wrong length', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.legitimate_interest.hash = b.tiers.legitimate_interest.hash.slice(0, 62);
+        b.sections.restricted.hash = b.sections.restricted.hash.slice(0, 62);
       }),
       'BAD_LENGTH',
     );
@@ -95,7 +104,7 @@ describe('computeBundleRoot fails closed on malformed input', () => {
   it('a salt of the wrong length', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.public.salt = b.tiers.public.salt + '00';
+        b.sections.public.salt = b.sections.public.salt + '00';
       }),
       'BAD_LENGTH',
     );
@@ -130,55 +139,55 @@ describe('computeBundleRoot fails closed on further shape faults', () => {
     );
   });
 
-  it('tiers that are not an object', () => {
+  it('sections that are not an object', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers = [];
+        b.sections = [];
       }),
       'MALFORMED_BUNDLE',
     );
   });
 
-  it('a tier entry that is not an object', () => {
+  it('a section entry that is not an object', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.authority = 'hash';
+        b.sections.compliance = 'hash';
       }),
-      'TIER_MALFORMED',
+      'SECTION_MALFORMED',
     );
   });
 
-  it('a doc whose tier does not match its key', () => {
+  it('a doc whose section does not match its key', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.public.doc.tier = 'authority';
+        b.sections.public.doc.section = 'usage';
       }),
-      'TIER_MISMATCH',
+      'SECTION_MISMATCH',
     );
   });
 
   it('a doc with an extra member', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.public.doc.extra = 1;
+        b.sections.public.doc.extra = 1;
       }),
-      'TIER_MALFORMED',
+      'SECTION_MALFORMED',
     );
   });
 
   it('a doc whose data is not an object', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.public.doc.data = [1, 2];
+        b.sections.public.doc.data = [1, 2];
       }),
-      'TIER_MALFORMED',
+      'SECTION_MALFORMED',
     );
   });
 
   it('a doc with a non-canonicalisable data value', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.public.doc.data.bad = Number.NaN;
+        b.sections.public.doc.data.bad = Number.NaN;
       }),
       'CANON_NON_FINITE',
     );
@@ -259,9 +268,9 @@ describe('computeBundleRoot fails closed on further shape faults', () => {
   it('a doc that is not an object', () => {
     expectFailure(
       corrupted((b) => {
-        b.tiers.public.doc = 'doc';
+        b.sections.public.doc = 'doc';
       }),
-      'TIER_MALFORMED',
+      'SECTION_MALFORMED',
     );
   });
 

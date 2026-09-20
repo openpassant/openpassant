@@ -2,10 +2,10 @@
 import { sha256 } from '@noble/hashes/sha2.js';
 import { canonicalize } from './canonicalize.js';
 import { CoreError } from './errors.js';
-import type { JsonValue, TierDoc } from './types.js';
+import type { JsonValue, SectionDoc } from './types.js';
 
 /** Domain-separation prefixes, crypto spec section 1. */
-export const PREFIX_TIER = 0x10;
+export const PREFIX_SECTION = 0x10;
 export const PREFIX_LEAF = 0x00;
 export const PREFIX_NODE = 0x01;
 
@@ -27,8 +27,8 @@ function concatBytes(...parts: readonly Uint8Array[]): Uint8Array {
 }
 
 /**
- * Computes a tier hash per crypto spec section 3:
- * `H( 0x10 || salt || JCS(tierDoc) )`.
+ * Computes a section hash per crypto spec section 3:
+ * `H( 0x10 || salt || JCS(sectionDoc) )`.
  *
  * The document is canonicalised as given; callers are responsible for it
  * having exactly the four members of crypto spec section 2.
@@ -37,28 +37,33 @@ function concatBytes(...parts: readonly Uint8Array[]): Uint8Array {
  * @throws CoreError `BAD_LENGTH` if the salt is not 16 bytes;
  *   `CANON_*` if the document is not canonicalisable JSON.
  */
-export function tierHash(salt: Uint8Array, doc: TierDoc): Uint8Array {
+export function sectionHash(salt: Uint8Array, doc: SectionDoc): Uint8Array {
   if (!(salt instanceof Uint8Array) || salt.length !== 16) {
     throw new CoreError('BAD_LENGTH', 'salt must be exactly 16 bytes');
   }
   const json = utf8.encode(canonicalize(doc as unknown as JsonValue));
-  return sha256(concatBytes(Uint8Array.of(PREFIX_TIER), salt, json));
+  return sha256(concatBytes(Uint8Array.of(PREFIX_SECTION), salt, json));
 }
 
 /**
- * Combines the three tier hashes into a Merkle leaf per crypto spec
- * section 3: `H( 0x00 || h_public || h_legitimate_interest || h_authority )`.
- * The 97-byte preimage fixes the tier order.
+ * Combines the four section hashes into a Merkle leaf per crypto spec
+ * section 3: `H( 0x00 || h_public || h_restricted || h_compliance || h_usage )`.
+ * The 129-byte preimage fixes the section order.
  *
- * @throws CoreError `BAD_LENGTH` if any tier hash is not 32 bytes.
+ * @throws CoreError `BAD_LENGTH` if any section hash is not 32 bytes.
  */
-export function leafHash(hPub: Uint8Array, hLi: Uint8Array, hAuth: Uint8Array): Uint8Array {
-  for (const h of [hPub, hLi, hAuth]) {
+export function leafHash(
+  hPublic: Uint8Array,
+  hRestricted: Uint8Array,
+  hCompliance: Uint8Array,
+  hUsage: Uint8Array,
+): Uint8Array {
+  for (const h of [hPublic, hRestricted, hCompliance, hUsage]) {
     if (!(h instanceof Uint8Array) || h.length !== 32) {
-      throw new CoreError('BAD_LENGTH', 'tier hashes must be exactly 32 bytes');
+      throw new CoreError('BAD_LENGTH', 'section hashes must be exactly 32 bytes');
     }
   }
-  return sha256(concatBytes(Uint8Array.of(PREFIX_LEAF), hPub, hLi, hAuth));
+  return sha256(concatBytes(Uint8Array.of(PREFIX_LEAF), hPublic, hRestricted, hCompliance, hUsage));
 }
 
 /**

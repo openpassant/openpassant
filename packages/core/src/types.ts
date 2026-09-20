@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /**
- * An access tier of a passport version, per crypto spec section 2.
+ * A content section of a passport version, per crypto spec section 2 —
+ * one per Annex XIII point of Regulation (EU) 2023/1542.
  */
-export type Tier = 'public' | 'legitimate_interest' | 'authority';
+export type Section = 'public' | 'restricted' | 'compliance' | 'usage';
 
 /**
- * The three access tiers in the fixed order defined by crypto spec section 2.
- * Tier hashes MUST be combined into a leaf in exactly this order.
+ * The four content sections in the fixed order defined by crypto spec
+ * section 2. Section hashes MUST be combined into a leaf in exactly this
+ * order.
  */
-export const TIERS: readonly Tier[] = ['public', 'legitimate_interest', 'authority'];
+export const SECTIONS: readonly Section[] = ['public', 'restricted', 'compliance', 'usage'];
 
 /**
  * Any value representable in JSON. `canonicalize` accepts exactly this set;
@@ -18,17 +20,17 @@ export const TIERS: readonly Tier[] = ['public', 'legitimate_interest', 'authori
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [k: string]: JsonValue };
 
 /**
- * One tier document of a passport version, per crypto spec section 2:
+ * One section document of a passport version, per crypto spec section 2:
  * a JSON object with exactly these four members.
  */
-export interface TierDoc {
-  /** Passport identifier URL, identical across all three tier documents. */
+export interface SectionDoc {
+  /** Passport identifier URL, identical across all four section documents. */
   id: string;
   /** Passport version, a positive integer starting at 1. */
   version: number;
-  /** The tier this document belongs to. */
-  tier: Tier;
-  /** Schema fields tagged with this tier. Opaque JSON to this package. */
+  /** The section this document belongs to. */
+  section: Section;
+  /** Schema fields tagged with this section. Opaque JSON to this package. */
   data: { [k: string]: JsonValue };
 }
 
@@ -56,25 +58,25 @@ export interface MerkleTree {
 }
 
 /**
- * One tier's entry in a proof bundle, per crypto spec section 5: either the
- * disclosed document with its salt (lowercase hex, 16 bytes), or the bare
- * tier hash (lowercase hex, 32 bytes) — never both, never neither.
+ * One section's entry in a proof bundle, per crypto spec section 5: either
+ * the disclosed document with its salt (lowercase hex, 16 bytes), or the
+ * bare section hash (lowercase hex, 32 bytes) — never both, never neither.
  */
-export type TierEntry = { doc: TierDoc; salt: string } | { hash: string };
+export type SectionEntry = { doc: SectionDoc; salt: string } | { hash: string };
 
 /**
- * A `passant-proof/1` proof bundle, exactly as crypto spec section 5.
+ * A `passant-proof/2` proof bundle, exactly as crypto spec section 5.
  * Bundles arrive from the network; use {@link computeBundleRoot} to
  * validate and evaluate one rather than trusting this shape.
  */
 export interface ProofBundle {
-  spec: 'passant-proof/1';
+  spec: 'passant-proof/2';
   /** Passport identifier URL. */
   id: string;
   /** Passport version, a positive integer starting at 1. */
   version: number;
-  /** All three tiers, each disclosed or bare. */
-  tiers: Record<Tier, TierEntry>;
+  /** All four sections, each disclosed or bare. */
+  sections: Record<Section, SectionEntry>;
   merkle: {
     /** Audit path from the leaf to the root. */
     path: ProofStep[];
@@ -92,10 +94,10 @@ export interface ProofBundle {
 }
 
 /**
- * Result of {@link computeBundleRoot}: the recomputed root and which tiers
- * were actually checked (tiers given as a bare hash are taken on trust), or
- * a typed failure. It never throws.
+ * Result of {@link computeBundleRoot}: the recomputed root and which
+ * sections were actually checked (sections given as a bare hash are taken
+ * on trust), or a typed failure. It never throws.
  */
 export type VerifyResult =
-  | { ok: true; root: Uint8Array; checkedTiers: Tier[] }
+  | { ok: true; root: Uint8Array; checkedSections: Section[] }
   | { ok: false; code: string; message: string };

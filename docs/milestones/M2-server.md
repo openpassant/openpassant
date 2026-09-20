@@ -9,9 +9,10 @@ PostgreSQL. The HLD "done when": a batch of 100 passports created through the AP
 
 ## Prerequisites
 
-- M0 delivered: `packages/schema` exists with the tier-tagged JSON Schema, generated
-  TypeScript types, and a validating sample passport. If it is missing or the tier tags are
-  incomplete, stop and hand back.
+- M0 delivered: `packages/schema` exists with the section-tagged JSON Schema (one tag per
+  field naming its Annex XIII section: `public`, `restricted`, `compliance`, `usage`),
+  generated TypeScript types, and a validating sample passport. If it is missing or the
+  section tags are incomplete, stop and hand back.
 - A reachable PostgreSQL for integration tests (Docker is fine; add a compose file for the
   database only — full packaging is M5).
 
@@ -34,9 +35,9 @@ PostgreSQL. The HLD "done when": a batch of 100 passports created through the AP
      `GET /healthz` (no auth on healthz).
    - OpenAPI document generated from the route schemas, served at `/openapi.json`.
 4. Version pipeline, on every version write, in one transaction: split the validated
-   content into the three tier documents using the schema's tier tags (empty tiers get
-   `data: {}`), draw one fresh salt per tier via `core.generateSalt`, compute tier hashes
-   and the leaf via `core`, store canonical JSON, salts, hashes and leaf, and insert the
+   content into the four section documents using the schema's section tags (empty sections
+   get `data: {}`), draw one fresh salt per section via `core.generateSalt`, compute section
+   hashes and the leaf via `core`, store canonical JSON, salts, hashes and leaf, and insert the
    leaf into the open `anchor_batches` row (status `pending`). Batch closing/anchoring is
    M3; M2 only accumulates.
 5. Append-only enforcement in the database itself: a trigger (or revoked privileges)
@@ -73,8 +74,8 @@ config) is hand-rolled or dev-only.
    green (integration tests get Postgres via a service container).
 2. An integration test creates a model and mints a batch of 100 passports through the HTTP
    API, then reads all 100 back with version 1 present.
-3. For a created version, a test reconstructs the three tier documents from the database,
-   recomputes tier hashes and leaf with `core`, and gets byte-identical values to the
+3. For a created version, a test reconstructs the four section documents from the database,
+   recomputes section hashes and leaf with `core`, and gets byte-identical values to the
    stored ones; the stored canonical JSON matches `core.canonicalize` output exactly.
 4. A test proves `UPDATE` and `DELETE` on `passport_versions` fail at the database level.
 5. Auth: requests without the bearer key get 401; malformed bodies get 400 with a stable
@@ -91,6 +92,6 @@ the PR description.
 
 ## If something does not add up
 
-If the schema package's tier tags conflict with the crypto spec's assumption of exactly
-three tiers, if append-only cannot be enforced at the database level, or if the GS1 Digital
+If the schema package's section tags conflict with the crypto spec's assumption of exactly
+four sections, if append-only cannot be enforced at the database level, or if the GS1 Digital
 Link shape in the HLD conflicts with the schema's identifier field — stop and ask.

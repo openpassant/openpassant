@@ -13,18 +13,19 @@ export interface CanonVector {
   sha256_of_utf8: string;
 }
 
-export interface TierHashVector {
-  tier: core.Tier;
+export interface SectionHashVector {
+  section: core.Section;
   salt: string;
-  doc: core.TierDoc;
+  doc: core.SectionDoc;
   canonical: string;
   hash: string;
 }
 
 export interface LeafVector {
-  h_pub: string;
-  h_li: string;
-  h_auth: string;
+  h_public: string;
+  h_restricted: string;
+  h_compliance: string;
+  h_usage: string;
   leaf: string;
 }
 
@@ -45,7 +46,7 @@ export interface MerkleLargeVector {
 export interface Vectors {
   spec: string;
   canonicalization: CanonVector[];
-  tier_hash: TierHashVector[];
+  section_hash: SectionHashVector[];
   leaf: LeafVector;
   merkle: MerkleVector[];
   merkle_large: MerkleLargeVector;
@@ -75,6 +76,10 @@ export function syntheticLeafHex(i: number): string {
  * derived through `api.fromHex` so they originate in the API's own realm.
  */
 export function runVectorSuite(api: CoreApi, vectors: Vectors): void {
+  it('the vector file declares passant-crypto/2', () => {
+    expect(vectors.spec).toBe('passant-crypto/2');
+  });
+
   describe('canonicalization vectors', () => {
     vectors.canonicalization.forEach((vector, i) => {
       it(`case ${i} canonicalises byte-exactly`, () => {
@@ -85,11 +90,14 @@ export function runVectorSuite(api: CoreApi, vectors: Vectors): void {
     });
   });
 
-  describe('tier hash vectors', () => {
-    vectors.tier_hash.forEach((vector) => {
-      it(`tier ${vector.tier}`, () => {
+  describe('section hash vectors', () => {
+    it('covers all four sections in fixed order', () => {
+      expect(vectors.section_hash.map((v) => v.section)).toEqual([...api.SECTIONS]);
+    });
+    vectors.section_hash.forEach((vector) => {
+      it(`section ${vector.section}`, () => {
         expect(api.canonicalize(vector.doc as unknown as core.JsonValue)).toBe(vector.canonical);
-        const hash = api.tierHash(api.fromHex(vector.salt), vector.doc);
+        const hash = api.sectionHash(api.fromHex(vector.salt), vector.doc);
         expect(api.toHex(hash)).toBe(vector.hash);
       });
     });
@@ -97,9 +105,10 @@ export function runVectorSuite(api: CoreApi, vectors: Vectors): void {
 
   it('leaf vector', () => {
     const leaf = api.leafHash(
-      api.fromHex(vectors.leaf.h_pub),
-      api.fromHex(vectors.leaf.h_li),
-      api.fromHex(vectors.leaf.h_auth),
+      api.fromHex(vectors.leaf.h_public),
+      api.fromHex(vectors.leaf.h_restricted),
+      api.fromHex(vectors.leaf.h_compliance),
+      api.fromHex(vectors.leaf.h_usage),
     );
     expect(api.toHex(leaf)).toBe(vectors.leaf.leaf);
   });
@@ -131,12 +140,12 @@ export function runVectorSuite(api: CoreApi, vectors: Vectors): void {
     expect(tree.proof(777)).toHaveLength(large.proof_index_777_length);
   });
 
-  it('bundle_public verifies to its stated root with checkedTiers [public]', () => {
+  it('bundle_public verifies to its stated root with checkedSections [public]', () => {
     const result = api.computeBundleRoot(vectors.bundle_public);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(api.toHex(result.root)).toBe(vectors.bundle_public.merkle.root);
-      expect(result.checkedTiers).toEqual(['public']);
+      expect(result.checkedSections).toEqual(['public']);
     }
   });
 }

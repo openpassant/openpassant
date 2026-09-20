@@ -1,9 +1,13 @@
 # @openpassant/core
 
 Canonicalisation, hashing, Merkle trees and proof-bundle verification for Passant digital
-product passports. This package implements `docs/crypto-spec.md` (`passant-crypto/1`)
+product passports. This package implements `docs/crypto-spec.md` (`passant-crypto/2`)
 sections 1 to 6 — verification steps 1 to 5 — byte-exactly; `docs/test-vectors.json` is the
 source of truth for every hash.
+
+Each passport version is split into four section documents (one per Annex XIII content
+point of Regulation (EU) 2023/1542: `public`, `restricted`, `compliance`, `usage`), each
+salted and hashed separately, and the four section hashes combine into one Merkle leaf.
 
 Everything is pure and synchronous except `generateSalt`, and runs unchanged in Node and in
 browsers: no `Buffer`, `node:crypto` or `fs`, random bytes come from
@@ -18,26 +22,28 @@ import {
   buildTree,
   generateSalt,
   leafHash,
-  tierHash,
+  sectionHash,
   toHex,
-  TIERS,
-  type TierDoc,
+  SECTIONS,
+  type SectionDoc,
 } from '@openpassant/core';
 
 const id = 'https://id.example.com/01/09506000134352/21/SN-0001';
 const version = 1;
 
-// One document and one fresh salt per access tier, in the fixed TIERS order.
-const docs: TierDoc[] = TIERS.map((tier) => ({
+// One document and one fresh salt per content section, in the fixed SECTIONS order.
+const docs: SectionDoc[] = SECTIONS.map((section) => ({
   id,
   version,
-  tier,
-  data: tier === 'public' ? { chemistry: 'Li-ion NMC' } : {},
+  section,
+  data: section === 'public' ? { chemistry: 'Li-ion NMC' } : {},
 }));
 const salts = docs.map(() => generateSalt()); // store these with the version
-const [hPub, hLi, hAuth] = docs.map((doc, i) => tierHash(salts[i]!, doc));
+const [hPublic, hRestricted, hCompliance, hUsage] = docs.map((doc, i) =>
+  sectionHash(salts[i]!, doc),
+);
 
-const leaf = leafHash(hPub!, hLi!, hAuth!);
+const leaf = leafHash(hPublic!, hRestricted!, hCompliance!, hUsage!);
 
 // A batch is an ordered list of leaves; the order determines the root.
 const tree = buildTree([leaf]);
@@ -58,12 +64,12 @@ if (!result.ok) {
 } else {
   // Compare toHex(result.root) against the root read from the chain —
   // never against the bundle's own merkle.root.
-  console.log(toHex(result.root), result.checkedTiers);
+  console.log(toHex(result.root), result.checkedSections);
 }
 ```
 
-`checkedTiers` lists the tiers that were recomputed from a disclosed document; tiers supplied
-as a bare hash are taken on trust, and a verifier should say so.
+`checkedSections` lists the sections that were recomputed from a disclosed document;
+sections supplied as a bare hash are taken on trust, and a verifier should say so.
 
 ## Spec
 

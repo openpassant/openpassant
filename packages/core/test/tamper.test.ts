@@ -33,7 +33,7 @@ describe('tamper detection, starting from bundle_public', () => {
   it('is detected: one character of a data value', () => {
     expectDetected(
       tampered((b) => {
-        b.tiers.public.doc.data.chemistry = 'Li-ion NMD';
+        b.sections.public.doc.data.chemistry = 'Li-ion NMD';
       }),
     );
   });
@@ -41,7 +41,7 @@ describe('tamper detection, starting from bundle_public', () => {
   it('is detected: the salt', () => {
     expectDetected(
       tampered((b) => {
-        b.tiers.public.salt = flipHexChar(b.tiers.public.salt);
+        b.sections.public.salt = flipHexChar(b.sections.public.salt);
       }),
     );
   });
@@ -49,7 +49,7 @@ describe('tamper detection, starting from bundle_public', () => {
   it('is detected: doc.version', () => {
     expectDetected(
       tampered((b) => {
-        b.tiers.public.doc.version = 2;
+        b.sections.public.doc.version = 2;
       }),
     );
   });
@@ -57,15 +57,15 @@ describe('tamper detection, starting from bundle_public', () => {
   it('is detected: doc.id', () => {
     expectDetected(
       tampered((b) => {
-        b.tiers.public.doc.id = b.tiers.public.doc.id + 'x';
+        b.sections.public.doc.id = b.sections.public.doc.id + 'x';
       }),
     );
   });
 
-  it('is detected: a bare tier hash', () => {
+  it('is detected: a bare section hash', () => {
     expectDetected(
       tampered((b) => {
-        b.tiers.legitimate_interest.hash = flipHexChar(b.tiers.legitimate_interest.hash);
+        b.sections.restricted.hash = flipHexChar(b.sections.restricted.hash);
       }),
     );
   });

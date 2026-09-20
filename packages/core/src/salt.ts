@@ -2,7 +2,7 @@
 
 /**
  * Generates a fresh 16-byte salt from the platform CSPRNG
- * (crypto spec section 1). One fresh salt per tier per version;
+ * (crypto spec section 1). One fresh salt per section per version;
  * salts must never be reused or derived from passport content.
  */
 export function generateSalt(): Uint8Array {

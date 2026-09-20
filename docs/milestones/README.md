@@ -6,7 +6,7 @@ each ends with the hand-back report described in `CLAUDE.md`.
 
 | Milestone | Brief | Delivers | Depends on |
 | --- | --- | --- | --- |
-| M0 | owner-written | `packages/schema`: Annex XIII field list as JSON Schema, tier tags, generated types, one validating sample passport | — |
+| M0 | owner-written | `packages/schema`: Annex XIII field list as JSON Schema, section tags (crypto spec §2), generated types, one validating sample passport | — |
 | M1 | `M1-core.md` (**done**) | `packages/core`: canonicalisation, hashing, Merkle, bundle verification | — |
 | M2 | `M2-server.md` | `packages/server`: issuing API, Postgres persistence, version hashing, anchor queue | M0, M1 |
 | M3 | `M3-adapter-vechain.md` | `packages/adapter-vechain`: registry contract on testnet, batched anchoring, fee delegation; server wiring | M2, owner testnet setup |
@@ -15,7 +15,7 @@ each ends with the hand-back report described in `CLAUDE.md`.
 
 ## Owner prerequisites (nobody else may do these)
 
-- **Before M2**: M0 exists — `packages/schema` with the tier-tagged JSON Schema and a
+- **Before M2**: M0 exists — `packages/schema` with the section-tagged JSON Schema and a
   validating sample passport. M2 freezes on whatever field list it finds there.
 - **Before M3**: a funded VeChain **testnet** wallet for deployment, an operator signing key
   and a sponsor (VIP-191) key, all delivered as environment variables per `.env.example`.
@@ -28,7 +28,7 @@ each ends with the hand-back report described in `CLAUDE.md`.
 
 ## Deliberately outside the slice (do not build in M2–M5)
 
-Restricted-tier access grants, the admin UI, CSV supplier intake, EU registry integration,
+Restricted-section access grants, the admin UI, CSV supplier intake, EU registry integration,
 lifecycle events, hosted-service concerns. They are v0.2+ (HLD §9, §11).
 
 ## Standing rules that shape every brief

@@ -1,5 +1,14 @@
 # Milestone M1: the `core` package
 
+> **Historical note (2026-09-20).** This brief was written for `passant-crypto/1` (three
+> access-tier documents per leaf). After M1 was delivered, the spec was revised to
+> `passant-crypto/2` (four section documents, one per Annex XIII point — see
+> `docs/research/regulation-2023-1542-verification.md`), and `core` plus the vectors were
+> updated accordingly: `Tier`/`TIERS`/`TierDoc`/`tierHash` became
+> `Section`/`SECTIONS`/`SectionDoc`/`sectionHash`, `leafHash` takes four hashes, and the
+> bundle spec is `passant-proof/2`. Everything else below still describes the delivered
+> package. Read `docs/crypto-spec.md` for the current normative layout.
+
 ## Goal
 
 Deliver `packages/core`: a small, dependency-light TypeScript library that implements `docs/crypto-spec.md` sections 1 to 6 (steps 1 to 5 of verification) exactly, and passes every vector in `docs/test-vectors.json`. Because this is the first milestone, it also sets up the minimal monorepo scaffold.
