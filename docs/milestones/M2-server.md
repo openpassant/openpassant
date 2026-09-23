@@ -47,11 +47,20 @@ PostgreSQL. The HLD "done when": a batch of 100 passports created through the AP
    VeChain implementation is M3; nothing in M2 imports a VeChain package.
 7. Typed error responses (`{ code, message }`, stable codes) and fail-closed validation at
    every boundary; requests that fail schema validation never reach the database.
+8. Registry-upload integration point (Article 77(10) — added by owner decision,
+   2026-09-23): each passport tracks its EU DPP registry status (`registered_at`,
+   nullable). `GET /passports:registry-export` returns the unique identifiers and
+   registration metadata of passports not yet registered, as JSON ready to hand to the
+   registry; `POST /passports:registry-confirm` records the registration timestamp for a
+   list of identifiers and fails closed on unknown ones. No network call to the registry
+   is made: actual registration needs an eIDAS-verified operator account and remains a
+   project-owner action (see `docs/research/regulation-2023-1542-verification.md`).
 
 ## Out of scope
 
 Anchoring transactions, the resolver and public pages (M4), QR codes, JSON-LD, access
-grants, admin UI, CSV intake, multi-operator support, rate limiting.
+grants, admin UI, CSV intake, multi-operator support, rate limiting, and direct EU
+registry API integration (M2 ships only the export/confirm hook above).
 
 ## Constraints
 
@@ -84,6 +93,9 @@ config) is hand-rolled or dev-only.
    create duplicate passports.
 7. `/openapi.json` validates as OpenAPI 3.x and covers every route.
 8. Statement and branch coverage for `packages/server/src` is at least 85%.
+9. Registry hook: a test mints a batch, reads the registry export, confirms a subset of
+   identifiers, and the next export omits exactly those; confirming an unknown
+   identifier returns a typed error and records nothing.
 
 ## Deliverables
 

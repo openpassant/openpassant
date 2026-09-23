@@ -6,7 +6,7 @@ each ends with the hand-back report described in `CLAUDE.md`.
 
 | Milestone | Brief | Delivers | Depends on |
 | --- | --- | --- | --- |
-| M0 | owner-written | `packages/schema`: Annex XIII field list as JSON Schema, section tags (crypto spec §2), generated types, one validating sample passport | — |
+| M0 | owner-signed (**done** 2026-09-23) | `packages/schema`: Annex XIII field list as JSON Schema, section tags (crypto spec §2), generated types, one validating sample passport | — |
 | M1 | `M1-core.md` (**done**) | `packages/core`: canonicalisation, hashing, Merkle, bundle verification | — |
 | M2 | `M2-server.md` | `packages/server`: issuing API, Postgres persistence, version hashing, anchor queue | M0, M1 |
 | M3 | `M3-adapter-vechain.md` | `packages/adapter-vechain`: registry contract on testnet, batched anchoring, fee delegation; server wiring | M2, owner testnet setup |
@@ -28,7 +28,8 @@ each ends with the hand-back report described in `CLAUDE.md`.
 
 ## Deliberately outside the slice (do not build in M2–M5)
 
-Restricted-section access grants, the admin UI, CSV supplier intake, EU registry integration,
+Restricted-section access grants, the admin UI, CSV supplier intake, direct EU registry
+API integration (M2 carries only an identifier export/confirm hook per Article 77(10)),
 lifecycle events, hosted-service concerns. They are v0.2+ (HLD §9, §11).
 
 ## Standing rules that shape every brief
