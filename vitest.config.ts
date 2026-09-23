@@ -6,10 +6,18 @@ export default defineConfig({
     include: ['packages/*/test/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['packages/core/src/**'],
+      include: ['packages/core/src/**', 'packages/server/src/**'],
+      // The listen entry point is not exercised by tests.
+      exclude: ['packages/server/src/server.ts'],
       thresholds: {
-        statements: 95,
-        branches: 95,
+        'packages/core/src/**': {
+          statements: 95,
+          branches: 95,
+        },
+        'packages/server/src/**': {
+          statements: 85,
+          branches: 85,
+        },
       },
     },
   },
