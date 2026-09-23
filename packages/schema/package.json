@@ -6,9 +6,10 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./battery-passport.schema.json": "./schemas/battery-passport.schema.json"
   },
   "files": [
     "dist",
@@ -16,6 +17,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig.json --noEmit"
+    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig.json --noEmit",
+    "generate": "node scripts/generate-types.mjs && prettier --write src/types.ts"
   }
 }

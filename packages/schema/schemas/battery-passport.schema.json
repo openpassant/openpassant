@@ -1,0 +1,646 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openpassant.org/schemas/battery-passport/0.1.0",
+  "title": "BatteryPassport",
+  "description": "Content of one LMT battery passport version under Regulation (EU) 2023/1542, Annex XIII. Adopted by the project owner on 2026-09-23 (M0 sign-off). Every top-level property carries an x-section tag naming its Annex XIII content section (crypto spec section 2). Sources and encoding decisions: docs/research/annex-xiii-field-list.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "identification",
+    "manufacturer",
+    "manufacturing",
+    "characteristics",
+    "hazardousSubstances",
+    "criticalRawMaterials",
+    "renewableContentSharePct",
+    "electrical",
+    "performance",
+    "markings",
+    "euDeclarationOfConformity",
+    "wasteManagement",
+    "detailedComposition",
+    "spareParts",
+    "dismantling",
+    "safetyMeasures",
+    "testReports",
+    "performanceValues",
+    "stateOfHealth",
+    "status"
+  ],
+  "properties": {
+    "identification": {
+      "x-section": "public",
+      "description": "Battery category and identification (Annex VI Part A points 1-2 via Annex XIII 1(a); guidance DP 2, 6, 7). The passport's unique identifier (DP 1) is the envelope id, not repeated here.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["batteryCategory", "modelId", "serialNumber", "responsibleOperator"],
+      "properties": {
+        "batteryCategory": {
+          "const": "lmt",
+          "description": "MVP scope is LMT batteries (Art. 3(1)(24))."
+        },
+        "modelId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Model identification (Art. 38(6))."
+        },
+        "serialNumber": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Batch or serial number, or product number (Art. 38(6))."
+        },
+        "productNumber": { "type": "string", "minLength": 1 },
+        "predecessorPassportIds": {
+          "description": "Identifiers of the passports of the original battery or batteries, when this battery was prepared for re-use, repurposed or remanufactured (Art. 77(7)).",
+          "type": "array",
+          "items": { "type": "string", "format": "uri" }
+        },
+        "responsibleOperator": {
+          "description": "Identity of the economic operator responsible for the passport (Art. 77(3)-(4); guidance DP 2).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "contact": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "manufacturer": {
+      "x-section": "public",
+      "description": "Manufacturer identity (Annex VI Part A point 1, Art. 38(7); guidance DP 3-5).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "postalAddress"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Name, registered trade name or trade mark."
+        },
+        "postalAddress": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Postal address with a single contact point."
+        },
+        "website": { "type": "string", "format": "uri" },
+        "email": { "type": "string", "format": "email" }
+      }
+    },
+    "manufacturing": {
+      "x-section": "public",
+      "description": "Place and date of manufacture (Annex VI Part A points 3-4; guidance DP 8-9).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["place", "date"],
+      "properties": {
+        "place": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Geographical location of the manufacturing plant."
+        },
+        "date": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+          "description": "Month and year of manufacture, YYYY-MM."
+        }
+      }
+    },
+    "characteristics": {
+      "x-section": "public",
+      "description": "Weight, capacity, chemistry, extinguishing agent (Annex VI Part A points 5-7 and 9; guidance DP 10-12, 14; DP 25 rated capacity is a declared duplicate and modelled once here).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["weightG", "ratedCapacityMah", "chemistry", "extinguishingAgent"],
+      "properties": {
+        "weightG": { "type": "integer", "minimum": 1, "description": "Weight in grams." },
+        "ratedCapacityMah": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Rated capacity in milliampere-hours (Annex XIII 1(g))."
+        },
+        "chemistry": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Free text pending a controlled vocabulary (guidance defers format)."
+        },
+        "extinguishingAgent": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Usable extinguishing agent."
+        }
+      }
+    },
+    "hazardousSubstances": {
+      "x-section": "public",
+      "description": "Hazardous substances present other than mercury, cadmium or lead (Annex VI Part A point 8, Annex XIII 1(b); guidance DP 13). Empty array when none.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "casNumber": {
+            "type": "string",
+            "pattern": "^[0-9]{2,7}-[0-9]{2}-[0-9]$",
+            "description": "CAS registry number, if identified."
+          }
+        }
+      }
+    },
+    "criticalRawMaterials": {
+      "x-section": "public",
+      "description": "Critical raw materials present above 0,1 % w/w (Annex VI Part A point 10; guidance DP 15). Empty array when none.",
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "carbonFootprint": {
+      "x-section": "public",
+      "description": "Carbon footprint information (Annex XIII 1(c), Art. 7(1)-(2)). OPTIONAL for LMT until 18 Aug 2028 (declaration) / 18 Feb 2030 (class); formats pending implementing acts (guidance DP 17-18).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["totalKgCo2ePerKwh"],
+      "properties": {
+        "totalKgCo2ePerKwh": {
+          "$ref": "#/$defs/decimalString",
+          "description": "kg CO2e per kWh of total lifetime energy (Art. 7(1))."
+        },
+        "performanceClass": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Carbon footprint performance class (Art. 7(2))."
+        },
+        "declarationNumber": { "type": "string", "minLength": 1 },
+        "studyUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Web link to the public carbon footprint study (Art. 7(1)(g))."
+        }
+      }
+    },
+    "dueDiligenceReport": {
+      "x-section": "public",
+      "description": "Responsible sourcing information per the Art. 52(3) due-diligence report (Annex XIII 1(d)). OPTIONAL: obligations apply from 18 Aug 2027 (Reg. 2025/1561) and Art. 47 exempts operators below EUR 40m turnover (guidance DP 19).",
+      "$ref": "#/$defs/documentRef"
+    },
+    "recycledContent": {
+      "x-section": "public",
+      "description": "Recovered-material shares in active materials / the battery (Annex XIII 1(e), Art. 8(1); guidance DP 20-23). OPTIONAL for LMT until 18 Aug 2033.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recoveredCobaltPct",
+        "recoveredLithiumPct",
+        "recoveredNickelPct",
+        "recoveredLeadPct"
+      ],
+      "properties": {
+        "recoveredCobaltPct": { "$ref": "#/$defs/percentString" },
+        "recoveredLithiumPct": { "$ref": "#/$defs/percentString" },
+        "recoveredNickelPct": { "$ref": "#/$defs/percentString" },
+        "recoveredLeadPct": { "$ref": "#/$defs/percentString" }
+      }
+    },
+    "renewableContentSharePct": {
+      "x-section": "public",
+      "description": "Share of renewable content, percent (Annex XIII 1(f); guidance DP 24 marks it mandatory; the regulation gives no methodology - value as declared by the operator).",
+      "$ref": "#/$defs/percentString"
+    },
+    "electrical": {
+      "x-section": "public",
+      "description": "Voltages and power (Annex XIII 1(h)-(i); guidance DP 26-30). Millivolts and watts as integers.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["voltageMinMv", "voltageNominalMv", "voltageMaxMv", "powerCapabilityW"],
+      "properties": {
+        "voltageMinMv": { "type": "integer", "minimum": 0 },
+        "voltageNominalMv": { "type": "integer", "minimum": 0 },
+        "voltageMaxMv": { "type": "integer", "minimum": 0 },
+        "voltageTemperatureRangeC": {
+          "$ref": "#/$defs/temperatureRangeC",
+          "description": "Temperature range for the voltage figures, when relevant."
+        },
+        "powerCapabilityW": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Original power capability in watts."
+        },
+        "powerLimits": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Power capability limits, free text pending a defined format."
+        },
+        "powerTemperatureRangeC": {
+          "$ref": "#/$defs/temperatureRangeC",
+          "description": "Temperature range for the power figures, when relevant."
+        }
+      }
+    },
+    "performance": {
+      "x-section": "public",
+      "description": "Rated performance and endurance of the model (Annex XIII 1(j), 1(l), 1(n)-(p); guidance DP 31-32, 34, 36-39).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expectedLifetimeCycles",
+        "lifetimeReferenceTest",
+        "initialRoundTripEfficiencyPct",
+        "roundTripEfficiencyAtHalfCycleLifePct",
+        "internalResistance",
+        "cycleLifeTestCRate",
+        "storageTemperatureRangeC",
+        "storageTemperatureReferenceTest"
+      ],
+      "properties": {
+        "expectedLifetimeCycles": { "type": "integer", "minimum": 1 },
+        "lifetimeReferenceTest": { "type": "string", "minLength": 1 },
+        "initialRoundTripEfficiencyPct": { "$ref": "#/$defs/percentString" },
+        "roundTripEfficiencyAtHalfCycleLifePct": {
+          "$ref": "#/$defs/percentString",
+          "description": "Round trip energy efficiency at 50 % of cycle life."
+        },
+        "internalResistance": {
+          "description": "Internal battery cell and pack resistance in milliohms (Annex XIII 1(o)).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cellMohm", "packMohm"],
+          "properties": {
+            "cellMohm": { "type": "integer", "minimum": 0 },
+            "packMohm": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "cycleLifeTestCRate": {
+          "$ref": "#/$defs/decimalString",
+          "description": "C-rate of the relevant cycle-life test."
+        },
+        "storageTemperatureRangeC": {
+          "$ref": "#/$defs/temperatureRangeC",
+          "description": "Temperature range the battery can withstand when not in use (Annex XIII 1(l))."
+        },
+        "storageTemperatureReferenceTest": { "type": "string", "minLength": 1 }
+      }
+    },
+    "warranty": {
+      "x-section": "public",
+      "description": "Commercial warranty for the calendar life (Annex XIII 1(m)). OPTIONAL: only where a warranty is envisaged (guidance DP 35).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["calendarLifeMonths"],
+      "properties": {
+        "calendarLifeMonths": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "markings": {
+      "x-section": "public",
+      "description": "Marking requirements of Art. 13(4)-(5) (Annex XIII 1(q); guidance DP 40-41).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["symbols"],
+      "properties": {
+        "symbols": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "enum": ["separate_collection", "cadmium", "lead"] },
+          "description": "separate_collection is always required; cadmium/lead only above the Art. 13(5) thresholds."
+        },
+        "labelImage": { "$ref": "#/$defs/documentRef" }
+      }
+    },
+    "euDeclarationOfConformity": {
+      "x-section": "public",
+      "description": "The EU declaration of conformity (Annex XIII 1(r), Art. 18; guidance DP 42).",
+      "$ref": "#/$defs/documentRef"
+    },
+    "wasteManagement": {
+      "x-section": "public",
+      "description": "Waste prevention and management information, Art. 74(1)(a)-(f) (Annex XIII 1(s); guidance DP 43). Each member is text or a URL.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preventionRole",
+        "separateCollectionRole",
+        "collectionPoints",
+        "safetyInstructions",
+        "labelMeanings",
+        "substanceImpacts"
+      ],
+      "properties": {
+        "preventionRole": {
+          "type": "string",
+          "minLength": 1,
+          "description": "End-user role in waste prevention (74(1)(a))."
+        },
+        "separateCollectionRole": {
+          "type": "string",
+          "minLength": 1,
+          "description": "End-user role in separate collection (74(1)(b))."
+        },
+        "collectionPoints": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Separate collection, take-back and collection points (74(1)(c))."
+        },
+        "safetyInstructions": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Safety instructions for waste batteries, including lithium risks (74(1)(d))."
+        },
+        "labelMeanings": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Meaning of labels and symbols (74(1)(e))."
+        },
+        "substanceImpacts": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Impact of substances on environment and health (74(1)(f))."
+        }
+      }
+    },
+    "detailedComposition": {
+      "x-section": "restricted",
+      "description": "Detailed composition, including cathode, anode and electrolyte materials (Annex XIII 2(a); guidance DP 45).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cathodeMaterials", "anodeMaterials", "electrolyteMaterials"],
+      "properties": {
+        "cathodeMaterials": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "anodeMaterials": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "electrolyteMaterials": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "spareParts": {
+      "x-section": "restricted",
+      "description": "Part numbers for components and sources for replacement spares (Annex XIII 2(b); guidance DP 46-47).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["components", "suppliers"],
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["component", "partNumber"],
+            "properties": {
+              "component": { "type": "string", "minLength": 1 },
+              "partNumber": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "suppliers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "contact"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "contact": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "dismantling": {
+      "x-section": "restricted",
+      "description": "Dismantling information (Annex XIII 2(c); guidance DP 48).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "explodedDiagrams",
+        "disassemblySequences",
+        "fasteners",
+        "tools",
+        "warnings",
+        "cellCount",
+        "cellLayout"
+      ],
+      "properties": {
+        "explodedDiagrams": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/documentRef" },
+          "description": "Exploded diagrams showing the location of battery cells."
+        },
+        "disassemblySequences": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "fasteners": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["type", "count"],
+            "properties": {
+              "type": { "type": "string", "minLength": 1 },
+              "count": { "type": "integer", "minimum": 1 }
+            }
+          },
+          "description": "Type and number of fastening techniques to be unlocked."
+        },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Tools required for disassembly."
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "description": "Warnings where risk of damaging parts exists. Empty array when none."
+        },
+        "cellCount": { "type": "integer", "minimum": 1 },
+        "cellLayout": { "type": "string", "minLength": 1 }
+      }
+    },
+    "safetyMeasures": {
+      "x-section": "restricted",
+      "description": "Safety measures (Annex XIII 2(d); guidance DP 49).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instructions"],
+      "properties": {
+        "instructions": { "type": "string", "minLength": 1 },
+        "documents": { "type": "array", "items": { "$ref": "#/$defs/documentRef" } }
+      }
+    },
+    "testReports": {
+      "x-section": "compliance",
+      "description": "Results of test reports proving compliance (Annex XIII point 3; guidance DP 50).",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["subject", "report"],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Which requirement the report proves compliance with."
+          },
+          "report": { "$ref": "#/$defs/documentRef" },
+          "issuedBy": { "type": "string", "minLength": 1 },
+          "date": { "type": "string", "format": "date" }
+        }
+      }
+    },
+    "performanceValues": {
+      "x-section": "usage",
+      "description": "Values of the Art. 10(1) / Annex IV Part A parameters for this individual battery, at placing on the market and on status changes (Annex XIII 4(a); guidance DP 51-60). Round-trip values where applicable.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "capacityFadePct",
+        "powerW",
+        "powerFadePct",
+        "internalResistanceMohm",
+        "internalResistanceIncreasePct",
+        "expectedLifetimeCycles",
+        "expectedLifetimeCalendarYears"
+      ],
+      "properties": {
+        "ratedCapacityMah": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Dynamic per-unit rated capacity (guidance DP 51)."
+        },
+        "capacityFadePct": { "$ref": "#/$defs/percentString" },
+        "powerW": { "type": "integer", "minimum": 0 },
+        "powerFadePct": { "$ref": "#/$defs/percentString" },
+        "internalResistanceMohm": { "type": "integer", "minimum": 0 },
+        "internalResistanceIncreasePct": { "$ref": "#/$defs/percentString" },
+        "roundTripEfficiencyPct": { "$ref": "#/$defs/percentString" },
+        "roundTripEfficiencyFadePct": { "$ref": "#/$defs/percentString" },
+        "expectedLifetimeCycles": { "type": "integer", "minimum": 1 },
+        "expectedLifetimeCalendarYears": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "stateOfHealth": {
+      "x-section": "usage",
+      "description": "State of health per Art. 14 with the LMT parameter set of Annex VII Part A (Annex XIII 4(b); guidance DP 62-66). SOCE is EV-only and deliberately absent.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["remainingCapacityMah"],
+      "properties": {
+        "remainingCapacityMah": { "type": "integer", "minimum": 0 },
+        "remainingPowerCapabilityW": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Where possible."
+        },
+        "remainingRoundTripEfficiencyPct": {
+          "$ref": "#/$defs/percentString",
+          "description": "Where possible."
+        },
+        "selfDischargeRates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["recordedAt", "ratePctPerMonth"],
+            "properties": {
+              "recordedAt": { "type": "string", "format": "date" },
+              "ratePctPerMonth": { "$ref": "#/$defs/percentString" }
+            }
+          },
+          "description": "Evolution of self-discharging rates."
+        },
+        "ohmicResistanceMohm": { "type": "integer", "minimum": 0, "description": "Where possible." }
+      }
+    },
+    "status": {
+      "x-section": "usage",
+      "description": "Battery status (Annex XIII 4(c); guidance DP 67). The regulation's exact terms, including the hyphenated 're-used'.",
+      "enum": ["original", "repurposed", "re-used", "remanufactured", "waste"]
+    },
+    "usageData": {
+      "x-section": "usage",
+      "description": "Information and data resulting from use (Annex XIII 4(d); guidance DP 68-71, all 'if applicable'). OPTIONAL as a whole.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "chargeDischargeCycles": { "type": "integer", "minimum": 0 },
+        "negativeEvents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["date", "description"],
+            "properties": {
+              "date": { "type": "string", "format": "date" },
+              "description": { "type": "string", "minLength": 1 }
+            }
+          },
+          "description": "Negative events, such as accidents."
+        },
+        "environmentalRecords": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["recordedAt", "temperatureC", "stateOfChargePct"],
+            "properties": {
+              "recordedAt": { "type": "string", "format": "date-time" },
+              "temperatureC": { "type": "integer" },
+              "stateOfChargePct": { "$ref": "#/$defs/percentString" }
+            }
+          },
+          "description": "Periodically recorded operating environmental conditions and state of charge."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "decimalString": {
+      "type": "string",
+      "pattern": "^-?[0-9]+(\\.[0-9]+)?$",
+      "description": "Decimal number as a string, to stay clear of number-canonicalisation edge cases (crypto spec section 2)."
+    },
+    "percentString": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+)?$",
+      "description": "Non-negative percentage as a decimal string."
+    },
+    "temperatureRangeC": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minC", "maxC"],
+      "properties": {
+        "minC": { "type": "integer" },
+        "maxC": { "type": "integer" }
+      }
+    },
+    "documentRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "url"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "format": "uri" },
+        "mimeType": { "type": "string", "minLength": 1 },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "Lowercase hex SHA-256 of the document, for tamper evidence."
+        }
+      }
+    }
+  }
+}

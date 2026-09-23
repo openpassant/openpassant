@@ -1,0 +1,140 @@
+{
+  "identification": {
+    "batteryCategory": "lmt",
+    "modelId": "URB-504",
+    "serialNumber": "SN-0001",
+    "responsibleOperator": {
+      "name": "Volta Cycles GmbH",
+      "contact": "compliance@voltacycles.example"
+    }
+  },
+  "manufacturer": {
+    "name": "Volta Cycles GmbH",
+    "postalAddress": "Beispielstrasse 12, 10115 Berlin, Germany",
+    "website": "https://voltacycles.example",
+    "email": "hello@voltacycles.example"
+  },
+  "manufacturing": {
+    "place": "Poznan, Poland",
+    "date": "2027-03"
+  },
+  "characteristics": {
+    "weightG": 2800,
+    "ratedCapacityMah": 14000,
+    "chemistry": "Li-ion NMC 811",
+    "extinguishingAgent": "Water mist; class D powder"
+  },
+  "hazardousSubstances": [
+    {
+      "name": "1,3-dioxolane",
+      "casNumber": "646-06-0"
+    }
+  ],
+  "criticalRawMaterials": ["cobalt", "lithium", "natural graphite", "nickel"],
+  "renewableContentSharePct": "4.5",
+  "electrical": {
+    "voltageMinMv": 30000,
+    "voltageNominalMv": 36000,
+    "voltageMaxMv": 42000,
+    "voltageTemperatureRangeC": { "minC": -20, "maxC": 60 },
+    "powerCapabilityW": 500,
+    "powerLimits": "250 W continuous, 500 W peak for 30 s",
+    "powerTemperatureRangeC": { "minC": -10, "maxC": 45 }
+  },
+  "performance": {
+    "expectedLifetimeCycles": 800,
+    "lifetimeReferenceTest": "IEC 61960-3:2017",
+    "initialRoundTripEfficiencyPct": "96",
+    "roundTripEfficiencyAtHalfCycleLifePct": "92.5",
+    "internalResistance": { "cellMohm": 25, "packMohm": 60 },
+    "cycleLifeTestCRate": "0.5",
+    "storageTemperatureRangeC": { "minC": -20, "maxC": 45 },
+    "storageTemperatureReferenceTest": "IEC 62619:2022"
+  },
+  "warranty": { "calendarLifeMonths": 24 },
+  "markings": {
+    "symbols": ["separate_collection"]
+  },
+  "euDeclarationOfConformity": {
+    "title": "EU declaration of conformity URB-504",
+    "url": "https://voltacycles.example/docs/doc-urb-504.pdf",
+    "mimeType": "application/pdf",
+    "sha256": "9b3a1c0e2f4d5a6b7c8d9e0f1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d"
+  },
+  "wasteManagement": {
+    "preventionRole": "Charge between 20 and 80 percent and store cool to extend battery life.",
+    "separateCollectionRole": "Never dispose of this battery in household waste; return it separately.",
+    "collectionPoints": "Any Volta Cycles dealer and municipal collection points take the battery back free of charge.",
+    "safetyInstructions": "Do not open, crush or heat. A damaged lithium battery can ignite; keep it in a fireproof container and hand it in promptly.",
+    "labelMeanings": "The crossed-out wheeled bin means separate collection is required.",
+    "substanceImpacts": "Nickel, cobalt and lithium compounds can harm health and the environment if released; recycling recovers them."
+  },
+  "detailedComposition": {
+    "cathodeMaterials": ["LiNi0.8Mn0.1Co0.1O2"],
+    "anodeMaterials": ["graphite"],
+    "electrolyteMaterials": ["LiPF6 in EC/DMC"]
+  },
+  "spareParts": {
+    "components": [
+      { "component": "Battery management system", "partNumber": "BMS-504-A" },
+      { "component": "Casing seal kit", "partNumber": "CSK-504" }
+    ],
+    "suppliers": [{ "name": "Volta Cycles service", "contact": "parts@voltacycles.example" }]
+  },
+  "dismantling": {
+    "explodedDiagrams": [
+      {
+        "title": "URB-504 exploded view",
+        "url": "https://voltacycles.example/docs/urb-504-exploded.pdf",
+        "mimeType": "application/pdf"
+      }
+    ],
+    "disassemblySequences": [
+      "Remove the eight casing screws (Torx T20).",
+      "Disconnect the BMS harness.",
+      "Lift out the cell stack."
+    ],
+    "fasteners": [{ "type": "Torx T20 screw", "count": 8 }],
+    "tools": ["Torx T20 driver", "plastic spudger"],
+    "warnings": ["Do not puncture the pouch cells."],
+    "cellCount": 40,
+    "cellLayout": "10s4p"
+  },
+  "safetyMeasures": {
+    "instructions": "Discharge below 30 percent state of charge before dismantling; wear insulating gloves; keep a class D extinguisher within reach."
+  },
+  "testReports": [
+    {
+      "subject": "Safety of the stationary use phase (Article 12, Annex V)",
+      "report": {
+        "title": "Safety test report URB-504",
+        "url": "https://voltacycles.example/docs/urb-504-safety.pdf",
+        "mimeType": "application/pdf"
+      },
+      "issuedBy": "Example Test Labs GmbH",
+      "date": "2027-01-15"
+    }
+  ],
+  "performanceValues": {
+    "ratedCapacityMah": 14000,
+    "capacityFadePct": "0",
+    "powerW": 500,
+    "powerFadePct": "0",
+    "internalResistanceMohm": 60,
+    "internalResistanceIncreasePct": "0",
+    "roundTripEfficiencyPct": "96",
+    "expectedLifetimeCycles": 800,
+    "expectedLifetimeCalendarYears": 8
+  },
+  "stateOfHealth": {
+    "remainingCapacityMah": 14000,
+    "remainingPowerCapabilityW": 500,
+    "remainingRoundTripEfficiencyPct": "96",
+    "selfDischargeRates": [{ "recordedAt": "2027-03-14", "ratePctPerMonth": "1.8" }],
+    "ohmicResistanceMohm": 60
+  },
+  "status": "original",
+  "usageData": {
+    "chargeDischargeCycles": 0
+  }
+}
