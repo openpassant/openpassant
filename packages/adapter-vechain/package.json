@@ -1,0 +1,25 @@
+{
+  "name": "@openpassant/adapter-vechain",
+  "version": "0.1.0",
+  "description": "VeChainThor anchoring adapter for Passant: registry contract, VIP-191 fee-delegated anchoring, and on-chain event lookup. Testnet only.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "node scripts/compile.mjs && tsc -p tsconfig.build.json && tsc -p tsconfig.json --noEmit",
+    "deploy:testnet": "node --env-file=../../.env scripts/deploy.mjs"
+  },
+  "dependencies": {
+    "@vechain/sdk-core": "^2.1.0",
+    "@vechain/sdk-network": "^2.1.0"
+  },
+  "devDependencies": {
+    "solc": "^0.8.30"
+  }
+}

@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@fastify/swagger": "^9.9.0",
+    "@openpassant/adapter-vechain": "workspace:^",
     "@openpassant/core": "workspace:*",
     "@openpassant/schema": "workspace:*",
     "ajv": "^8.20.0",

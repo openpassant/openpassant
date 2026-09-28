@@ -26,9 +26,18 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
+      - name: Start thor-solo (local VeChain node for adapter tests)
+        run: |
+          docker run -d --name thor-solo -p 127.0.0.1:8669:8669 \
+            vechain/thor:v2.5.0 solo --on-demand --api-addr 0.0.0.0:8669 --api-cors '*'
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:8669/blocks/0 >/dev/null && break
+            sleep 1
+          done
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm test
         env:
           TEST_DATABASE_ADMIN_URL: postgres://postgres:postgres@localhost:5432/postgres
+          THOR_SOLO_URL: http://localhost:8669
       - run: pnpm lint
