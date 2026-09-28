@@ -16,7 +16,8 @@ export type AppErrorCode =
   | 'DUPLICATE_GTIN'
   | 'DUPLICATE_SERIAL'
   | 'BATCH_TOO_LARGE'
-  | 'MIGRATION_FAILED';
+  | 'MIGRATION_FAILED'
+  | 'VERIFIER_UNAVAILABLE';
 
 /**
  * Error carrying a stable `code` and the HTTP status the API responds with.

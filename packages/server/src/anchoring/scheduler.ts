@@ -18,6 +18,10 @@ export interface SchedulerOptions {
   batchWindowMs: number;
   /** Close an open batch once it holds this many leaves. */
   batchMax: number;
+  /** Anchor target recorded on each batch, e.g. `vechain:testnet`. */
+  chain: string;
+  /** Registry contract address the adapter anchors to, 0x-prefixed. */
+  contract: string;
 }
 
 // Must match the enqueue lock in versions.ts: closing and enqueueing
@@ -129,9 +133,9 @@ export class AnchorScheduler {
         await this.pool.query(
           `update anchor_batches
               set status = 'submitted', tx_id = $2, submitted_at = now(),
-                  attempts = attempts + 1, error = null
+                  attempts = attempts + 1, error = null, chain = $3, contract = $4
             where id = $1`,
-          [batch.id, receipt.txId],
+          [batch.id, receipt.txId, this.options.chain, this.options.contract.toLowerCase()],
         );
         summary.submitted += 1;
       } catch (error) {

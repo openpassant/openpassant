@@ -1,0 +1,21 @@
+{
+  "name": "@openpassant/web",
+  "version": "0.1.0",
+  "description": "In-browser passport verifier: checks a passant-proof/2 bundle against the root anchored on VeChainThor, without trusting the server that served the page.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/types/index.js"
+    },
+    "./verifier.js": "./dist/verifier.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/bundle.mjs && tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@openpassant/core": "workspace:*"
+  }
+}

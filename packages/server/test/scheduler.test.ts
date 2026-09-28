@@ -45,7 +45,12 @@ afterAll(async () => {
 });
 
 function scheduler(adapter: AnchorAdapter): AnchorScheduler {
-  return new AnchorScheduler(ctx.pool, adapter, { batchWindowMs: 3600000, batchMax: 5 });
+  return new AnchorScheduler(ctx.pool, adapter, {
+    batchWindowMs: 3600000,
+    batchMax: 5,
+    chain: 'vechain:testnet',
+    contract: '0x' + '12'.repeat(20),
+  });
 }
 
 async function mint(count: number): Promise<void> {
@@ -177,7 +182,12 @@ describe('anchor scheduler (acceptance criterion 4)', () => {
     const throwing = new AnchorScheduler(
       ctx.pool,
       new ThrowingStatusAdapter(),
-      { batchWindowMs: 3600000, batchMax: 5 },
+      {
+        batchWindowMs: 3600000,
+        batchMax: 5,
+        chain: 'vechain:testnet',
+        contract: '0x' + '12'.repeat(20),
+      },
       (error) => errors.push(error),
     );
     throwing.start(25);
