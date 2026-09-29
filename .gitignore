@@ -4,6 +4,7 @@ coverage/
 *.tsbuildinfo
 .env
 
-# openpassant.org is its own git repository and is pushed separately
-sites/openpassant.org/
+# Websites and company assets live in their own repositories
+# (openpassant.org is nested here as an independent git repo).
+sites/
 demo-out/

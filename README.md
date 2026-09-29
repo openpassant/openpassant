@@ -65,8 +65,7 @@ pnpm build && pnpm test && pnpm lint
 ```
 
 See `CONTRIBUTING.md` for ground rules — in short: the crypto spec and test vectors are
-law, one milestone at a time, testnet only. The engineering contract lives in `CLAUDE.md`;
-the original project handover pack is preserved unchanged in `docs/handover.md`.
+law, one milestone at a time, testnet only. The engineering contract lives in `CLAUDE.md`.
 
 ## Licence
 
