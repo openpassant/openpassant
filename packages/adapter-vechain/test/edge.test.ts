@@ -5,7 +5,7 @@ import { Transaction } from '@vechain/sdk-core';
 import { ThorClient } from '@vechain/sdk-network';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { VeChainAnchorAdapter } from '../src/adapter.js';
-import { deployRegistry } from '../src/deploy.js';
+import { deployRegistry, getGenesisId } from '../src/deploy.js';
 import { AdapterError } from '../src/errors.js';
 import { ANCHOR_SELECTOR } from '../src/registry.js';
 import { randomNonce } from '../src/tx.js';
@@ -72,6 +72,7 @@ describe('degraded node responses (mocked HTTP)', () => {
   let server: Server;
   let url: string;
   let bestBlock: Record<string, unknown> | null;
+  let genesisBlock: (() => unknown) | null = null;
 
   beforeAll(async () => {
     // A minimal Thor lookalike: genesis is real-shaped, the best block is
@@ -80,7 +81,9 @@ describe('degraded node responses (mocked HTTP)', () => {
     server = createServer((request, response) => {
       response.setHeader('content-type', 'application/json');
       if (request.url?.startsWith('/blocks/0')) {
-        response.end(JSON.stringify({ id: genesisId, number: 0 }));
+        response.end(
+          JSON.stringify(genesisBlock === null ? { id: genesisId, number: 0 } : genesisBlock()),
+        );
       } else if (request.url?.startsWith('/blocks/best')) {
         response.end(JSON.stringify(bestBlock));
       } else if (request.url?.startsWith('/transactions') && request.method === 'POST') {
@@ -108,6 +111,13 @@ describe('degraded node responses (mocked HTTP)', () => {
     });
     const receipt = await mocked.anchor(new Uint8Array(32));
     expect(receipt.txId).toBe('0x' + 'ab'.repeat(32));
+  });
+
+  it('getGenesisId reads the chain identity and fails closed without one', async () => {
+    expect(await getGenesisId(SOLO_URL)).toBe(genesisId);
+    genesisBlock = () => null;
+    await expect(getGenesisId(url)).rejects.toMatchObject({ code: 'SEND_FAILED' });
+    genesisBlock = null;
   });
 
   it('fails closed when the node returns no best block', async () => {

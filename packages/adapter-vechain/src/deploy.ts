@@ -6,6 +6,19 @@ import { ThorClient } from '@vechain/sdk-network';
 import { AdapterError } from './errors.js';
 import { randomNonce } from './tx.js';
 
+/**
+ * Reads the connected node's genesis block id — the network's identity.
+ * Callers compare it against the known constants (or, for a local solo
+ * chain, merely assert it is not mainnet).
+ */
+export async function getGenesisId(nodeUrl: string): Promise<string> {
+  const genesis = await ThorClient.at(nodeUrl).blocks.getGenesisBlock();
+  if (genesis === null) {
+    throw new AdapterError('SEND_FAILED', 'node returned no genesis block');
+  }
+  return genesis.id;
+}
+
 /** Result of a registry deployment. */
 export interface DeployResult {
   contractAddress: string;
