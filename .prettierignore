@@ -3,6 +3,7 @@ node_modules/
 dist/
 coverage/
 pnpm-lock.yaml
+.env.example
 
 # Handover artefacts: not code owned by the toolchain
 design/
