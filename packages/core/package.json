@@ -2,8 +2,32 @@
   "name": "@openpassant/core",
   "version": "0.1.0",
   "description": "Canonicalisation, hashing, Merkle trees and proof-bundle verification for Passant digital product passports (passant-crypto/1).",
+  "keywords": [
+    "digital-product-passport",
+    "battery-passport",
+    "eu-battery-regulation",
+    "merkle-tree",
+    "rfc8785",
+    "canonicalization",
+    "verification",
+    "vechain"
+  ],
+  "homepage": "https://openpassant.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/openpassant/openpassant.git",
+    "directory": "packages/core"
+  },
+  "bugs": "https://github.com/openpassant/openpassant/issues",
   "license": "Apache-2.0",
   "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

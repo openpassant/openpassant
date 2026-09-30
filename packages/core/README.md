@@ -73,5 +73,7 @@ sections supplied as a bare hash are taken on trust, and a verifier should say s
 
 ## Spec
 
-See `docs/crypto-spec.md` in the repository root. If this package and the spec or the test
-vectors ever disagree, the package is wrong.
+The normative, byte-exact spec and its test vectors live in the repository:
+https://github.com/openpassant/openpassant/blob/main/docs/crypto-spec.md and
+`docs/test-vectors.json`. If this package and the spec or the vectors ever disagree,
+the package is wrong.
