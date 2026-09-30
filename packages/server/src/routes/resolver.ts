@@ -38,7 +38,7 @@ const NOT_FOUND = new AppError('PASSPORT_NOT_FOUND', 404, 'no passport at this a
  * hashes in the proof bundle.
  */
 export function registerResolverRoutes(app: FastifyInstance, pool: pg.Pool, config: Config): void {
-  const verifierNodeUrl = config.vechain?.nodeUrl ?? 'https://testnet.vechain.org';
+  const verifierNodeUrl = config.vechain?.publicNodeUrl ?? 'https://testnet.vechain.org';
 
   app.get<{ Params: ResolverParams; Querystring: VersionQuery }>(
     '/01/:gtin/21/:serial',

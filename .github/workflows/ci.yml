@@ -42,3 +42,11 @@ jobs:
           TEST_DATABASE_ADMIN_URL: postgres://postgres:postgres@localhost:5432/postgres
           THOR_SOLO_URL: http://localhost:8669
       - run: pnpm lint
+      - name: Validate compose files and build the server image
+        run: |
+          docker compose -f compose.yaml -f compose.solo.yaml config -q
+          docker build -t passant .
+      - name: Image runs as non-root
+        run: |
+          uid=$(docker run --rm --entrypoint id passant -u)
+          test "$uid" != "0"

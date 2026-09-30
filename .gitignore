@@ -3,6 +3,4 @@ dist/
 coverage/
 *.tsbuildinfo
 .env
-
-# openpassant.org is its own git repository and is pushed separately
-sites/openpassant.org/
+demo-out/

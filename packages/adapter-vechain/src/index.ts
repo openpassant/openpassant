@@ -14,7 +14,7 @@ export type {
   AnchoredEvent,
   VeChainAnchorAdapterOptions,
 } from './adapter.js';
-export { deployRegistry, registryBytecode } from './deploy.js';
+export { deployRegistry, getGenesisId, registryBytecode } from './deploy.js';
 export type { DeployResult } from './deploy.js';
 export { AdapterError } from './errors.js';
 export type { AdapterErrorCode } from './errors.js';

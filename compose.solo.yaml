@@ -1,0 +1,30 @@
+# SPDX-License-Identifier: Apache-2.0
+# LOCAL-ONLY override: anchors to a throwaway thor-solo chain instead of the
+# VeChain testnet, so the whole demo runs with no internet access and no
+# keys of your own. The private keys below are thor-solo's PUBLIC built-in
+# developer accounts (documented in the thor repository) — they are chain
+# fixtures, not secrets, and hold no value anywhere real.
+#
+#   docker compose -f compose.yaml -f compose.solo.yaml up -d
+services:
+  server:
+    environment:
+      # Zero-config local defaults; override any of them in .env if you like.
+      BASE_URL: ${BASE_URL:-http://localhost:3000}
+      ISSUER_API_KEY: ${ISSUER_API_KEY:-passant-demo-key} # local-only default
+      ANCHOR_BATCH_WINDOW_MS: ${ANCHOR_BATCH_WINDOW_MS:-15000}
+      VECHAIN_NODE_URL: http://thor-solo:8669
+      VECHAIN_PUBLIC_NODE_URL: http://localhost:8669
+      VECHAIN_NETWORK: solo
+      VECHAIN_CONTRACT_ADDRESS: '' # auto-deployed at startup on solo
+      OPERATOR_PRIVATE_KEY: '0x7b067f53d350f1cf20ec13df416b7b73e88a1dc7331bc904b92108b1e76a08b1'
+      SPONSOR_PRIVATE_KEY: '0x99f0500549792796c14fed62011a51081dc5b5e68fe8bd8a13b86be829c4fd36'
+    depends_on:
+      thor-solo:
+        condition: service_started
+
+  thor-solo:
+    image: vechain/thor:v2.5.0
+    command: solo --on-demand --api-addr 0.0.0.0:8669 --api-cors '*'
+    ports:
+      - '127.0.0.1:8669:8669'

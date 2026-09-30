@@ -61,12 +61,43 @@ describe('loadConfig', () => {
       expect(config.vechain?.contractAddress).toBe('0x' + '12'.repeat(20));
     });
 
-    it('refuses mainnet and anything that is not "testnet"', () => {
-      for (const network of ['mainnet', 'main', 'solo', 'MAINNET']) {
+    it('refuses mainnet and anything that is not testnet or solo', () => {
+      for (const network of ['mainnet', 'main', 'MAINNET', 'TESTNET', 'devnet']) {
         expect(codeOf(() => loadConfig({ ...ENV, ...VECHAIN, VECHAIN_NETWORK: network }))).toBe(
           'CONFIG_INVALID',
         );
       }
+    });
+
+    it('accepts solo (local development chain) with an optional contract', () => {
+      const solo = loadConfig({ ...ENV, ...VECHAIN, VECHAIN_NETWORK: 'solo' });
+      expect(solo.vechain?.network).toBe('solo');
+      const withoutContract: Record<string, string> = { ...VECHAIN };
+      delete withoutContract['VECHAIN_CONTRACT_ADDRESS'];
+      const auto = loadConfig({ ...ENV, ...withoutContract, VECHAIN_NETWORK: 'solo' });
+      expect(auto.vechain?.contractAddress).toBeNull();
+      // On testnet the contract stays required.
+      expect(
+        codeOf(() => loadConfig({ ...ENV, ...withoutContract, VECHAIN_NETWORK: 'testnet' })),
+      ).toBe('CONFIG_MISSING');
+    });
+
+    it('separates the browser-facing node URL from the server-facing one', () => {
+      const config = loadConfig({
+        ...ENV,
+        ...VECHAIN,
+        VECHAIN_NODE_URL: 'http://thor-solo:8669',
+        VECHAIN_NETWORK: 'solo',
+        VECHAIN_PUBLIC_NODE_URL: 'http://localhost:8669',
+      });
+      expect(config.vechain?.nodeUrl).toBe('http://thor-solo:8669');
+      expect(config.vechain?.publicNodeUrl).toBe('http://localhost:8669');
+      expect(loadConfig({ ...ENV, ...VECHAIN }).vechain?.publicNodeUrl).toBe(
+        'https://testnet.vechain.org',
+      );
+      expect(
+        codeOf(() => loadConfig({ ...ENV, ...VECHAIN, VECHAIN_PUBLIC_NODE_URL: 'nope' })),
+      ).toBe('CONFIG_INVALID');
     });
 
     it('is all-or-nothing: a partial block fails closed', () => {
