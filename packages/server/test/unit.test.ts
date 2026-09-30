@@ -40,7 +40,66 @@ describe('loadConfig', () => {
     expect(codeOf(() => loadConfig({ ...ENV, ANCHOR_BATCH_MAX: 'ten' }))).toBe('CONFIG_INVALID');
     expect(codeOf(() => loadConfig({ ...ENV, ANCHOR_BATCH_MAX: '0' }))).toBe('CONFIG_INVALID');
   });
+
+  describe('VeChain block (acceptance criterion 5: refuses non-testnet)', () => {
+    const KEY = '0x' + 'ab'.repeat(32);
+    const VECHAIN = {
+      VECHAIN_NODE_URL: 'https://testnet.vechain.org',
+      VECHAIN_NETWORK: 'testnet',
+      VECHAIN_CONTRACT_ADDRESS: '0x' + '12'.repeat(20),
+      OPERATOR_PRIVATE_KEY: KEY,
+      SPONSOR_PRIVATE_KEY: KEY,
+    };
+
+    it('is absent when no VECHAIN_* variable is set', () => {
+      expect(loadConfig(ENV).vechain).toBeUndefined();
+    });
+
+    it('loads a complete testnet block', () => {
+      const config = loadConfig({ ...ENV, ...VECHAIN });
+      expect(config.vechain?.nodeUrl).toBe('https://testnet.vechain.org');
+      expect(config.vechain?.contractAddress).toBe('0x' + '12'.repeat(20));
+    });
+
+    it('refuses mainnet and anything that is not "testnet"', () => {
+      for (const network of ['mainnet', 'main', 'solo', 'MAINNET']) {
+        expect(codeOf(() => loadConfig({ ...ENV, ...VECHAIN, VECHAIN_NETWORK: network }))).toBe(
+          'CONFIG_INVALID',
+        );
+      }
+    });
+
+    it('is all-or-nothing: a partial block fails closed', () => {
+      expect(
+        codeOf(() => loadConfig({ ...ENV, VECHAIN_NODE_URL: 'https://testnet.vechain.org' })),
+      ).toBe('CONFIG_MISSING');
+    });
+
+    it('rejects malformed keys and addresses without echoing values', () => {
+      const badKey = codeOfWithMessage(() =>
+        loadConfig({ ...ENV, ...VECHAIN, OPERATOR_PRIVATE_KEY: '0xnope' }),
+      );
+      expect(badKey.code).toBe('CONFIG_INVALID');
+      expect(badKey.message).not.toContain('nope');
+      expect(
+        codeOf(() => loadConfig({ ...ENV, ...VECHAIN, VECHAIN_CONTRACT_ADDRESS: '0x123' })),
+      ).toBe('CONFIG_INVALID');
+      expect(codeOf(() => loadConfig({ ...ENV, ...VECHAIN, VECHAIN_NODE_URL: 'ftp://x' }))).toBe(
+        'CONFIG_INVALID',
+      );
+    });
+  });
 });
+
+function codeOfWithMessage(fn: () => unknown): { code: string; message: string } {
+  try {
+    fn();
+  } catch (error) {
+    expect(error).toBeInstanceOf(AppError);
+    return { code: (error as AppError).code, message: (error as AppError).message };
+  }
+  throw new Error('expected the call to throw');
+}
 
 describe('identifiers', () => {
   it('builds the GS1 Digital Link URL', () => {

@@ -24,4 +24,6 @@ export type {
   AnchorStatus,
   AnchoredEvent,
 } from './anchoring/adapter.js';
+export { AnchorScheduler } from './anchoring/scheduler.js';
+export type { SchedulerOptions, TickSummary } from './anchoring/scheduler.js';
 export { assertValidPassportContent, assertValidModelContent, deepMerge } from './validate.js';

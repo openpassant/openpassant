@@ -6,7 +6,11 @@ export default defineConfig({
     include: ['packages/*/test/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['packages/core/src/**', 'packages/server/src/**'],
+      include: [
+        'packages/core/src/**',
+        'packages/server/src/**',
+        'packages/adapter-vechain/src/**',
+      ],
       // The listen entry point is not exercised by tests.
       exclude: ['packages/server/src/server.ts'],
       thresholds: {
@@ -15,6 +19,10 @@ export default defineConfig({
           branches: 95,
         },
         'packages/server/src/**': {
+          statements: 85,
+          branches: 85,
+        },
+        'packages/adapter-vechain/src/**': {
           statements: 85,
           branches: 85,
         },
