@@ -26,7 +26,12 @@ if (config.vechain !== undefined) {
   const scheduler = new AnchorScheduler(
     pool,
     adapter,
-    { batchWindowMs: config.anchorBatchWindowMs, batchMax: config.anchorBatchMax },
+    {
+      batchWindowMs: config.anchorBatchWindowMs,
+      batchMax: config.anchorBatchMax,
+      chain: 'vechain:testnet',
+      contract: config.vechain.contractAddress,
+    },
     (error) => app.log.error(error),
   );
   scheduler.start(Math.min(config.anchorBatchWindowMs, 30000));

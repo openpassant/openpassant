@@ -10,6 +10,7 @@ export default defineConfig({
         'packages/core/src/**',
         'packages/server/src/**',
         'packages/adapter-vechain/src/**',
+        'packages/web/src/**',
       ],
       // The listen entry point is not exercised by tests.
       exclude: ['packages/server/src/server.ts'],
@@ -23,6 +24,10 @@ export default defineConfig({
           branches: 85,
         },
         'packages/adapter-vechain/src/**': {
+          statements: 85,
+          branches: 85,
+        },
+        'packages/web/src/**': {
           statements: 85,
           branches: 85,
         },
