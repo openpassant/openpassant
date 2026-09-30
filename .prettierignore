@@ -1,0 +1,12 @@
+# Build output and lockfiles
+node_modules/
+dist/
+coverage/
+pnpm-lock.yaml
+
+# Handover artefacts: not code owned by the toolchain
+design/
+sites/
+docs/
+CLAUDE.md
+README.md

@@ -1,8 +1,10 @@
-# Passant crypto spec (`passant-crypto/1`)
+# Passant crypto spec (`passant-crypto/2`)
 
 Status: normative. This document defines, byte for byte, how a passport version becomes a Merkle leaf, how leaves become a root, and how anyone verifies a passport against an anchored root. If an implementation disagrees with the test vectors in `docs/test-vectors.json`, the implementation is wrong.
 
 The key words MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119.
+
+> **History.** `passant-crypto/1` used three access-tier documents per version. It was withdrawn on 20 September 2026, before any deployment: verification against the consolidated text of Regulation (EU) 2023/1542 showed that Article 77(2) maps Annex XIII's four content points onto three *overlapping, non-nested* audiences, which three tiers cannot express (see `docs/research/regulation-2023-1542-verification.md`). No passport was ever issued or anchored under `/1`. Verifiers MUST reject `passant-proof/1`.
 
 ## 1. Primitives
 
@@ -11,53 +13,65 @@ The key words MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119.
 | Hash | SHA-256. `H(x)` is the 32-byte digest of byte string `x`. |
 | Concatenation | `a \|\| b` is byte concatenation with no separators or length prefixes. |
 | Canonical JSON | RFC 8785 (JSON Canonicalization Scheme, JCS), encoded as UTF-8 with no BOM. `JCS(v)` is that byte string. |
-| Salt | 16 bytes from a cryptographically secure random source. One fresh salt per tier per version. Salts MUST NOT be reused or derived from passport content. |
+| Salt | 16 bytes from a cryptographically secure random source. One fresh salt per section per version. Salts MUST NOT be reused or derived from passport content. |
 | Hex | Lowercase hexadecimal, no `0x` prefix, in all JSON produced by Passant. The `0x` prefix is used only for on-chain values (addresses, transaction ids, `bytes32` arguments). |
 
 Domain-separation bytes prevent a value of one kind from being mistaken for another:
 
 | Prefix | Used for |
 | --- | --- |
-| `0x10` | Tier hash |
+| `0x10` | Section hash |
 | `0x00` | Leaf hash |
 | `0x01` | Merkle interior node |
 
 Note: the HLD shows the hashing formula without these prefix bytes for readability. This spec is authoritative.
 
-## 2. Tier documents
+## 2. Section documents
 
-Each passport version is split into exactly three tier documents, one per access tier, in this fixed order:
+Each passport version is split into exactly four section documents, one per Annex XIII content point of Regulation (EU) 2023/1542, in this fixed order:
 
-1. `public`
-2. `legitimate_interest`
-3. `authority`
+1. `public` — Annex XIII point 1 (model-level, publicly accessible data)
+2. `restricted` — Annex XIII point 2 (detailed composition, part numbers, dismantling and safety information)
+3. `compliance` — Annex XIII point 3 (results of test reports proving compliance)
+4. `usage` — Annex XIII point 4 (individual-battery state and usage data)
 
-A tier document is a JSON object with exactly these four members:
+Access roles map onto sections per Article 77(2); roles overlap and are NOT nested:
+
+| Role | Sections readable |
+| --- | --- |
+| General public | `public` |
+| Persons with a legitimate interest | `public`, `restricted`, `usage` |
+| Notified bodies, market surveillance authorities, the Commission | `public`, `restricted`, `compliance` |
+
+This mapping is access-control policy for the resolver; it does not affect hashing. Which schema field belongs to which section is the schema's job, not this spec's.
+
+A section document is a JSON object with exactly these four members:
 
 ```json
 {
-  "id": "<passport identifier URL, identical in all three>",
+  "id": "<passport identifier URL, identical in all four>",
   "version": 1,
-  "tier": "public",
+  "section": "public",
   "data": { }
 }
 ```
 
-- `id` and `version` bind the hash to one passport version, so a tier document cannot be replayed under another passport or version.
+- `id` and `version` bind the hash to one passport version, so a section document cannot be replayed under another passport or version.
 - `version` is a positive integer starting at 1.
-- `data` holds the schema fields tagged with that tier. A tier with no fields MUST still be present with `"data": {}`; it is hashed like any other.
-- `core` treats `data` as opaque JSON. Which field belongs to which tier is the schema's job, not this spec's.
+- `data` holds the schema fields tagged with that section. A section with no fields MUST still be present with `"data": {}`; it is hashed like any other.
+- `core` treats `data` as opaque JSON.
 
 **Numbers.** JCS serialises numbers using the ECMAScript number-to-string algorithm. All numbers MUST be finite. Implementations in languages other than JavaScript MUST reproduce that algorithm exactly. To stay clear of edge cases, the schema SHOULD express measured quantities as integers in a smaller unit (for example watt-hours, not kilowatt-hours) or as decimal strings.
 
 ## 3. Hash construction
 
 ```
-tierHash(t) = H( 0x10 || salt_t || JCS(tierDoc_t) )          t in {public, legitimate_interest, authority}
-leaf        = H( 0x00 || tierHash(public) || tierHash(legitimate_interest) || tierHash(authority) )
+sectionHash(s) = H( 0x10 || salt_s || JCS(sectionDoc_s) )      s in {public, restricted, compliance, usage}
+leaf           = H( 0x00 || sectionHash(public) || sectionHash(restricted)
+                         || sectionHash(compliance) || sectionHash(usage) )
 ```
 
-The leaf preimage is always 1 + 32 + 32 + 32 = 97 bytes.
+The leaf preimage is always 1 + 4 × 32 = 129 bytes.
 
 ## 4. Merkle tree
 
@@ -98,20 +112,20 @@ root' = h
 
 Carrying the position in each step means a verifier needs neither the leaf index nor the batch size.
 
-## 5. Proof bundle (`passant-proof/1`)
+## 5. Proof bundle (`passant-proof/2`)
 
-The resolver returns this object alongside a passport. Tiers the caller may see appear as `doc` + `salt`; the others appear as a bare `hash`.
+The resolver returns this object alongside a passport. Sections the caller may see appear as `doc` + `salt`; the others appear as a bare `hash`.
 
 ```json
 {
-  "spec": "passant-proof/1",
+  "spec": "passant-proof/2",
   "id": "https://id.example.com/01/09506000134352/21/SN-0001",
   "version": 1,
-  "tiers": {
+  "sections": {
     "public": {
       "doc": {
         "version": 1,
-        "tier": "public",
+        "section": "public",
         "id": "https://id.example.com/01/09506000134352/21/SN-0001",
         "data": {
           "ratedCapacityWh": 504,
@@ -128,11 +142,14 @@ The resolver returns this object alongside a passport. Tiers the caller may see 
       },
       "salt": "000102030405060708090a0b0c0d0e0f"
     },
-    "legitimate_interest": {
-      "hash": "8b833d77351df4342d682610aaf384f470e0e7afa71b8db1a1b5d1f5676aed33"
+    "restricted": {
+      "hash": "3ac6f278783760c0b35e20e6f0fd0e1e4ffb57049ba77517ee54b9aecf609e13"
     },
-    "authority": {
-      "hash": "c550316400f523ab88437adb2cdb88050c6149db46ca1f1ea97496871017e262"
+    "compliance": {
+      "hash": "1edc719bbbddc65138b3fa730ce52dffa69f17e68e4565ad903ff8d946546498"
+    },
+    "usage": {
+      "hash": "4e0473481a2fe85ee758d8d16e2f3dcfd8e91637c6a03b6e0661a86e416d0cb8"
     }
   },
   "merkle": {
@@ -146,7 +163,7 @@ The resolver returns this object alongside a passport. Tiers the caller may see 
         "hash": "649837ddcb7e1967086d7d35aaef7b975c513815d96fc6e70015e93a2bfe0f9a"
       }
     ],
-    "root": "810f4987724d085812ec50602ec006026aff7e54ca149e7c8245df9dcd91f30c"
+    "root": "9eebbb0fff86f32e94b9b1cf0cd07c982d3e79ff65b405228143a45c2f3d0fbf"
   },
   "anchor": {
     "chain": "vechain:testnet",
@@ -158,7 +175,8 @@ The resolver returns this object alongside a passport. Tiers the caller may see 
 
 Rules:
 
-- All three tiers MUST be present. Each is either `{ "doc", "salt" }` or `{ "hash" }`, never both and never neither.
+- All four sections MUST be present. Each is either `{ "doc", "salt" }` or `{ "hash" }`, never both and never neither.
+- Which sections are disclosed follows the caller's role per the table in section 2; a public caller receives only `public` as `doc` + `salt`.
 - `merkle.root` is informational. A verifier MUST compare against the root read from the chain, not the root in the bundle.
 - `anchor.chain` uses the form `<network>:<environment>`, for example `vechain:testnet` or `vechain:mainnet`.
 
@@ -166,15 +184,15 @@ Rules:
 
 A verifier holding a bundle MUST perform these steps and fail closed on any error:
 
-1. Check `spec == "passant-proof/1"`.
-2. For every tier given as `doc` + `salt`: check that `doc.id == bundle.id`, `doc.version == bundle.version` and `doc.tier` equals the tier's key. Compute its tier hash per section 3.
-3. For every tier given as `hash`: take the hash as supplied.
-4. Compute `leaf` from the three tier hashes in the fixed order.
+1. Check `spec == "passant-proof/2"`.
+2. For every section given as `doc` + `salt`: check that `doc.id == bundle.id`, `doc.version == bundle.version` and `doc.section` equals the section's key. Compute its section hash per section 3.
+3. For every section given as `hash`: take the hash as supplied.
+4. Compute `leaf` from the four section hashes in the fixed order.
 5. Fold `merkle.path` per section 4.2 to get `root'`.
 6. Fetch the `Anchored` event for `anchor.txId` from a node of `anchor.chain`. Check that it was emitted by `anchor.contract` and read its `root`.
 7. The passport verifies if and only if `root'` equals the on-chain root. Report the event's sender address and block time with the result.
 
-Steps 1 to 5 are pure functions and live in the `core` package. Step 6 needs network access and lives in the chain adapter. A verifier SHOULD also display which tiers it actually checked, because a bare `hash` tier is taken on trust.
+Steps 1 to 5 are pure functions and live in the `core` package. Step 6 needs network access and lives in the chain adapter. A verifier SHOULD also display which sections it actually checked, because a bare `hash` section is taken on trust.
 
 ## 7. Registry contract interface
 
@@ -187,33 +205,34 @@ function anchor(bytes32 root) external;
 
 ## 8. Test vectors
 
-The complete, machine-readable set is in `docs/test-vectors.json`. Tests MUST load that file rather than copy values from this page. The vectors were generated by a Python reference implementation and independently re-verified with a separate JavaScript implementation. A few are reproduced here for orientation.
+The complete, machine-readable set is in `docs/test-vectors.json`. Tests MUST load that file rather than copy values from this page. The vectors were generated by a Python reference implementation and independently re-verified with a separate TypeScript implementation; the Python generator also reproduces the withdrawn `/1` vectors byte-exactly as a regression check on itself. A few are reproduced here for orientation.
 
 ### 8.1 Canonicalisation
 
 Input members in arbitrary order, with a non-ASCII string, a fraction, `false` and `null`. Canonical output (one line):
 
 ```
-{"data":{"chemistry":"Li-ion NMC","hazardous":false,"manufacturer":"Vélo Énergie","notes":null,"ratedCapacityWh":504,"recycledShare":{"cobalt":12,"lithium":0,"nickel":0.5}},"id":"https://id.example.com/01/09506000134352/21/SN-0001","tier":"public","version":1}
+{"data":{"chemistry":"Li-ion NMC","hazardous":false,"manufacturer":"Vélo Énergie","notes":null,"ratedCapacityWh":504,"recycledShare":{"cobalt":12,"lithium":0,"nickel":0.5}},"id":"https://id.example.com/01/09506000134352/21/SN-0001","section":"public","version":1}
 ```
 
-SHA-256 of its UTF-8 bytes: `521e4ed44815d3587d550f0b66c0df0525ce00d4c8bd346c0a609c32c34865aa`
+SHA-256 of its UTF-8 bytes: `7d2af4d4260f0ec02c54b9932769322bfb619613043e318309319cf984d5e407`
 
-### 8.2 Tier hashes and leaf
+### 8.2 Section hashes and leaf
 
-Salts are `00..0f`, `10..1f` and `20..2f` for the three tiers in order.
+Salts are `00..0f`, `10..1f`, `20..2f` and `30..3f` for the four sections in order.
 
-| Tier | Salt | Tier hash |
+| Section | Salt | Section hash |
 | --- | --- | --- |
-| public | `000102030405060708090a0b0c0d0e0f` | `4d854766aba7b0896f2594c445692b3766a31082b070d736d71c262fadf7a4d7` |
-| legitimate_interest | `101112131415161718191a1b1c1d1e1f` | `8b833d77351df4342d682610aaf384f470e0e7afa71b8db1a1b5d1f5676aed33` |
-| authority (empty `data`) | `202122232425262728292a2b2c2d2e2f` | `c550316400f523ab88437adb2cdb88050c6149db46ca1f1ea97496871017e262` |
+| public | `000102030405060708090a0b0c0d0e0f` | `69882e95d3ebcbcddc27b3847b92dc21425468402e5cd37ee05926063e16128e` |
+| restricted | `101112131415161718191a1b1c1d1e1f` | `3ac6f278783760c0b35e20e6f0fd0e1e4ffb57049ba77517ee54b9aecf609e13` |
+| compliance (empty `data`) | `202122232425262728292a2b2c2d2e2f` | `1edc719bbbddc65138b3fa730ce52dffa69f17e68e4565ad903ff8d946546498` |
+| usage | `303132333435363738393a3b3c3d3e3f` | `4e0473481a2fe85ee758d8d16e2f3dcfd8e91637c6a03b6e0661a86e416d0cb8` |
 
-Leaf: `7f4092a5256c0fb9f96f2bbcbe7a7288257fa72b54e4688a8c5ac32aaec71686`
+Leaf: `0142dcd0d74366e152964ef8fef53415c1ceebd3c349422c611dd8dd01d22552`
 
 ### 8.3 Merkle roots
 
-Synthetic leaves are defined as `leaf_i = SHA256(utf8("leaf-" + i))`, `i` from 0.
+Synthetic leaves are defined as `leaf_i = SHA256(utf8("leaf-" + i))`, `i` from 0. These are independent of the section layout and are unchanged from `/1`.
 
 | Size | Root |
 | --- | --- |
@@ -236,8 +255,8 @@ For the 1,000-leaf tree, the proof for index 777 has 10 steps.
 
 ### 8.4 End-to-end bundle
 
-The bundle shown in section 5 is a real vector: the leaf from 8.2 sits at index 1 of a three-leaf batch between `leaf_0` and `leaf_2`. Verifying it per section 6, steps 1 to 5, MUST yield root `810f4987724d085812ec50602ec006026aff7e54ca149e7c8245df9dcd91f30c`.
+The bundle shown in section 5 is a real vector: the leaf from 8.2 sits at index 1 of a three-leaf batch between `leaf_0` and `leaf_2`. Verifying it per section 6, steps 1 to 5, MUST yield root `9eebbb0fff86f32e94b9b1cf0cd07c982d3e79ff65b405228143a45c2f3d0fbf`.
 
 ## 9. Versioning
 
-Any change to sections 1 to 6 that alters a single output byte requires a new spec identifier (`passant-crypto/2`, `passant-proof/2`). Verifiers MUST reject identifiers they do not know. Passports anchored under an old version stay verifiable under that version forever.
+Any change to sections 1 to 6 that alters a single output byte requires a new spec identifier (`passant-crypto/3`, `passant-proof/3`). Verifiers MUST reject identifiers they do not know, including the withdrawn `passant-crypto/1` / `passant-proof/1`, under which nothing was ever anchored. Passports anchored under a spec version stay verifiable under that version forever.

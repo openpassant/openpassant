@@ -14,16 +14,16 @@ deployment behind a real `BASE_URL` (owner provides the subdomain).
 
 ## In scope
 
-1. **Resolver routes in `server`** (public, no auth, MVP serves the public tier only):
+1. **Resolver routes in `server`** (public, no auth, MVP serves the public section only):
    - `GET ${BASE_URL}/01/{gtin}/21/{serial}` — server-rendered HTML public page: public
-     tier fields, version selector (`?version=n`, latest by default), anchor status, and
+     section fields, version selector (`?version=n`, latest by default), anchor status, and
      the verify control. Fast on a phone, meaningful without JavaScript (verification is
-     the only JS-dependent feature). Restricted tiers are shown as "restricted", never
+     the only JS-dependent feature). Restricted sections are shown as "restricted", never
      serialised into the page.
-   - Same URL with `Accept: application/ld+json` — JSON-LD of the public tier, vocabulary
+   - Same URL with `Accept: application/ld+json` — JSON-LD of the public section, vocabulary
      mapped to DIN DKE SPEC 99100 attribute names from the schema package's annotations.
-   - `GET .../proof?version=n` — the exact `passant-proof/1` bundle of crypto spec §5:
-     public tier as `doc` + `salt`, the other two as bare `hash`es, the stored Merkle
+   - `GET .../proof?version=n` — the exact `passant-proof/2` bundle of crypto spec §5:
+     the public section as `doc` + `salt`, the other three as bare `hash`es, the stored Merkle
      path, root, and anchor (`vechain:testnet`, contract, txId). Served only after the
      version's batch is confirmed; before that, an explicit "not yet anchored" response.
    - Unknown identifiers return 404 with no hint whether the serial pattern exists
@@ -35,7 +35,7 @@ deployment behind a real `BASE_URL` (owner provides the subdomain).
      over plain `fetch` (no VeChain package — hard rule; the event-decoding is ~30 lines
      against the Thor REST API), check the emitting contract, compare roots (steps 6–7);
    - render verified / failed / not-yet-anchored states, showing sender address, block
-     time, and which tiers were actually checked (`checkedTiers`) versus taken on trust.
+     time, and which sections were actually checked (`checkedSections`) versus taken on trust.
      Any unexpected condition renders as failure with a reason, never as a pass.
 3. **QR generation**: `GET /passports/{id}/qr.svg` (issuer-authenticated) returning the
    identifier URL as a QR at error-correction level Q; plus a bulk endpoint or script
@@ -46,7 +46,7 @@ deployment behind a real `BASE_URL` (owner provides the subdomain).
 
 ## Out of scope
 
-Access grants and authenticated tiers (v0.2), admin UI, CSV intake, EU registry, any
+Access grants and authenticated roles (v0.2), admin UI, CSV intake, EU registry, any
 mainnet configuration, styling beyond a clean minimal page (the marketing sites' design
 system may be borrowed for tokens but pixel work is not the milestone).
 
@@ -55,9 +55,9 @@ system may be borrowed for tokens but pixel work is not the milestone).
 - `web` and everything served to browsers: no Node-only APIs, no VeChain package imports.
 - The page and verifier must not trust the server they came from: the root always comes
   from the chain, never from `merkle.root` in the bundle (crypto spec §5 rule).
-- Salts for restricted tiers never leave the server; the bundle contains exactly what
+- Salts for restricted sections never leave the server; the bundle contains exactly what
   crypto spec §5 allows for a public caller.
-- JSON-LD and HTML render from the stored canonical tier documents, not from a re-query
+- JSON-LD and HTML render from the stored canonical section documents, not from a re-query
   of mutable state, so what is shown is what was hashed.
 
 ## Runtime dependencies proposed for approval
@@ -74,8 +74,8 @@ hand-rolled. Playwright as a dev dependency.
    the crypto spec §5 shape field-for-field (asserted against the spec's own example
    structure); tampering any byte of the served page's data makes the verifier fail red
    (Playwright, at least the eight tamper classes from M1's suite applied end-to-end).
-3. The public page contains zero restricted-tier values and zero salts for restricted
-   tiers, asserted by response scanning in tests; `Cache-Control` forbids caching on any
+3. The public page contains zero restricted-section values and zero salts for restricted
+   sections, asserted by response scanning in tests; `Cache-Control` forbids caching on any
    response that could ever carry restricted data.
 4. JSON-LD parses, round-trips through a JSON-LD expansion library in tests, and every
    public schema field appears under its DIN DKE SPEC 99100 name.

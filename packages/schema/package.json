@@ -1,0 +1,23 @@
+{
+  "name": "@openpassant/schema",
+  "version": "0.1.0",
+  "description": "EU battery passport as JSON Schema, every field tagged with its Annex XIII content section, plus generated TypeScript types.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./battery-passport.schema.json": "./schemas/battery-passport.schema.json"
+  },
+  "files": [
+    "dist",
+    "schemas",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && tsc -p tsconfig.json --noEmit",
+    "generate": "node scripts/generate-types.mjs && prettier --write src/types.ts"
+  }
+}
