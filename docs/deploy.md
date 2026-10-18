@@ -23,7 +23,7 @@ an EU datacenter (e.g. `ams3`, `fra1`). Replace `id.example.com` with your subdo
 On the host:
 
 ```sh
-git clone --branch v0.1.0 https://github.com/openpassant/openpassant && cd openpassant
+git clone --branch v0.1.1 https://github.com/openpassant/openpassant && cd openpassant
 ```
 
 Copy your `.env` from the machine where you prepared it (`scp .env host:openpassant/`),
