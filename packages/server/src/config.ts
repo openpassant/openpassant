@@ -119,7 +119,8 @@ function loadVeChain(env: Record<string, string | undefined>): Pick<Config, 'vec
   if (!/^https?:\/\//.test(nodeUrl)) {
     throw new AppError('CONFIG_INVALID', 500, 'VECHAIN_NODE_URL must be an http(s) URL');
   }
-  const publicNodeUrl = env['VECHAIN_PUBLIC_NODE_URL'] ?? nodeUrl;
+  // Empty means unset, like everywhere else here: Docker Compose passes '' for an unset variable.
+  const publicNodeUrl = env['VECHAIN_PUBLIC_NODE_URL'] || nodeUrl;
   if (!/^https?:\/\//.test(publicNodeUrl)) {
     throw new AppError('CONFIG_INVALID', 500, 'VECHAIN_PUBLIC_NODE_URL must be an http(s) URL');
   }

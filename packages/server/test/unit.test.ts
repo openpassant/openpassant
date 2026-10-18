@@ -95,6 +95,10 @@ describe('loadConfig', () => {
       expect(loadConfig({ ...ENV, ...VECHAIN }).vechain?.publicNodeUrl).toBe(
         'https://testnet.vechain.org',
       );
+      // Docker Compose passes '' when the variable is unset in .env.
+      expect(
+        loadConfig({ ...ENV, ...VECHAIN, VECHAIN_PUBLIC_NODE_URL: '' }).vechain?.publicNodeUrl,
+      ).toBe('https://testnet.vechain.org');
       expect(
         codeOf(() => loadConfig({ ...ENV, ...VECHAIN, VECHAIN_PUBLIC_NODE_URL: 'nope' })),
       ).toBe('CONFIG_INVALID');
