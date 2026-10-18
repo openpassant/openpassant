@@ -39,6 +39,10 @@ VeChain **testnet** (mainnet is deliberately refused everywhere):
 3. `docker compose up -d --build`, then `pnpm demo`. The demo prints the testnet
    explorer link for the anchoring transaction.
 
+To put an instance on a public host under TLS (so printed QR codes resolve), use the
+production override — `docker compose -f compose.yaml -f compose.prod.yaml up -d --build`
+— following `docs/deploy.md`.
+
 ## Repository map
 
 ```
@@ -47,6 +51,7 @@ docs/test-vectors.json     NORMATIVE: the source of truth for every hash
 docs/hld.md                High-level design (context)
 docs/milestones/           One brief per milestone, plus the plan
 docs/demo.md               The live-demo walkthrough script
+docs/deploy.md             Putting an instance on a public host behind TLS (Caddy)
 packages/schema            Battery passport as JSON Schema, section-tagged (Annex XIII)
 packages/core              Canonicalisation, hashing, Merkle, bundle verification
 packages/server            Issuing API, resolver, persistence, anchor queue

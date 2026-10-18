@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: Apache-2.0
+# PRODUCTION override: puts Caddy in front of the server as the TLS terminator for
+# BASE_URL and stops publishing the server's plain port 3000 — only 80 and 443 face
+# the internet. Walkthrough in docs/deploy.md.
+#
+#   docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+services:
+  server:
+    ports: !reset []
+
+  caddy:
+    image: caddy:2.11
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      BASE_URL: ${BASE_URL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - server
+
+volumes:
+  caddy-data:
+  caddy-config:

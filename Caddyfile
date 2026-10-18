@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0
+# Production reverse proxy (compose.prod.yaml): terminates TLS for BASE_URL and
+# forwards to the server. The site address IS BASE_URL, so the certificate always
+# matches the origin the QR codes carry; certificates come from Let's Encrypt and
+# renew automatically.
+{$BASE_URL} {
+	reverse_proxy server:3000
+}
