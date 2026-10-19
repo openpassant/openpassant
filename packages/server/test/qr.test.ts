@@ -75,7 +75,7 @@ describe('QR generation (acceptance criterion 5)', () => {
     const expected = await QRCode.toString(passportId, {
       type: 'svg',
       errorCorrectionLevel: 'Q',
-      margin: 2,
+      margin: 4,
     });
     expect(response.body).toBe(expected);
 
@@ -88,6 +88,12 @@ describe('QR generation (acceptance criterion 5)', () => {
     };
     expect(decodeMatrix(matrix)).toBe(passportId);
     expect(qr.errorCorrectionLevel.bit).toBe(3); // Q
+
+    // The SVG carries the ISO/IEC 18004 quiet zone: four modules on each side.
+    const quietZone = 4;
+    const boxSize = qr.modules.size + 2 * quietZone;
+    expect(response.body).toContain(`viewBox="0 0 ${boxSize} ${boxSize}"`);
+    expect(response.body).toContain(`d="M${quietZone} ${quietZone}.5h`);
   });
 
   it('produces a printable sheet with one labelled QR per passport', async () => {
@@ -100,6 +106,11 @@ describe('QR generation (acceptance criterion 5)', () => {
     expect(response.headers['content-type']).toContain('image/svg+xml');
     const nested = response.body.match(/<svg x="/g) ?? [];
     expect(nested).toHaveLength(3);
+    // Every tile keeps its own four-module quiet zone, so flush tiles still scan.
+    const qr = QRCode.create(passportId, { errorCorrectionLevel: 'Q' });
+    const boxSize = qr.modules.size + 8;
+    const boxes = response.body.match(/viewBox="0 0 \d+ \d+"/g) ?? [];
+    expect(boxes.slice(1)).toEqual(Array(3).fill(`viewBox="0 0 ${boxSize} ${boxSize}"`));
     for (const serial of ['QR-1', 'QR-2', 'QR-3']) {
       expect(response.body).toContain(`>${serial}</text>`);
     }

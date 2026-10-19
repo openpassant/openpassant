@@ -7,8 +7,10 @@ import { escapeHtml } from '../resolver/render.js';
 import { decodeId } from './passports.js';
 
 // Error correction level Q survives engraving and wear (HLD §5); the QR
-// payload is the identifier URL and nothing else.
-const QR_OPTIONS = { type: 'svg', errorCorrectionLevel: 'Q', margin: 2 } as const;
+// payload is the identifier URL and nothing else. The margin is the quiet
+// zone ISO/IEC 18004 requires: four modules on every side, kept inside the
+// SVG so the code is still scannable when tiles sit flush on a label sheet.
+const QR_OPTIONS = { type: 'svg', errorCorrectionLevel: 'Q', margin: 4 } as const;
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
